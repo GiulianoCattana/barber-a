@@ -1,0 +1,156 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Mi Panel de Cliente</h1>
+      <div class="user-info">
+        <span>Hola, {{ usuario?.nombre }}</span>
+        <button (click)="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
+    <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <section class="reservar-turno">
+      <h2>Reservar Nuevo Turno</h2>
+
+      <!-- PASO 1: Seleccionar Servicios (múltiples) -->
+      <div class="paso-servicio">
+        <h3>1. Selecciona los servicios (puedes elegir varios)</h3>
+        <div *ngIf="serviciosSeleccionados.length > 0" class="seleccion-actual">
+          <div class="seleccion-info">
+            <strong>Seleccionados:</strong> {{ getNombresServicios() }}
+          </div>
+          <div class="seleccion-detalles">
+            <span class="detalle-item">
+              <strong>⏱ Duración:</strong> {{ getDuracionTotal() }} minutos
+            </span>
+            <span class="detalle-item precio-destacado">
+              <strong>💰 Total:</strong> ${{ getPrecioTotal().toLocaleString('es-AR') }}
+            </span>
+          </div>
+        </div>
+        <div class="servicios-grid">
+          <button
+            *ngFor="let servicio of servicios"
+            class="servicio-card"
+            [class.seleccionado]="estaSeleccionado(servicio)"
+            (click)="seleccionarServicio(servicio)"
+          >
+            <div class="servicio-nombre">{{ servicio.nombre }}</div>
+            <div class="servicio-duracion">{{ servicio.duracion_minutos }} min</div>
+            <div class="servicio-precio" *ngIf="servicio.precio">${{ servicio.precio }}</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 2: Seleccionar Día (solo si hay servicio seleccionado) -->
+      <div *ngIf="mostrarFormulario" class="paso-dia">
+        <h3>2. Selecciona el día</h3>
+        <div class="dias-semana">
+          <button
+            *ngFor="let dia of diasDisponibles"
+            class="dia-btn"
+            [class.activo]="diaSeleccionado === dia.nombre"
+            (click)="seleccionarDia(dia)"
+          >
+            {{ dia.nombre }}
+            <span class="dia-fecha">{{ dia.fecha | date:'dd/MM' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 3: Seleccionar Horario (solo si hay servicio y día seleccionados) -->
+      <div *ngIf="mostrarHorarios" class="paso-horario">
+        <h3>3. Selecciona el horario</h3>
+        <p class="info-servicio">
+          Servicios: <strong>{{ getNombresServicios() }}</strong> ({{ getDuracionTotal() }} minutos)
+        </p>
+        <p class="horarios-leyenda">
+          <span class="leyenda-item"><span class="dot disponible"></span> Disponible</span>
+          <span class="leyenda-item"><span class="dot ocupado"></span> Ocupado</span>
+          <span class="leyenda-item"><span class="dot seleccionado"></span> Seleccionado</span>
+        </p>
+
+        <div class="horarios-grid">
+          <button
+            *ngFor="let horario of todosLosHorarios"
+            type="button"
+            class="horario-btn"
+            [class.disponible]="horario.disponible && !isHorarioSeleccionado(horario.hora)"
+            [class.ocupado]="!horario.disponible"
+            [class.seleccionado]="isHorarioSeleccionado(horario.hora)"
+            [disabled]="!horario.disponible"
+            (click)="seleccionarHorario(horario.hora, horario.disponible)"
+          >
+            {{ horario.hora }}
+          </button>
+        </div>
+
+        <!-- PASO 4: Confirmar Reserva -->
+        <form *ngIf="horaSeleccionada" (ngSubmit)="reservarTurno()" class="form-reserva">
+          <h3>4. Confirmar Reserva</h3>
+          <div class="resumen-reserva">
+            <p><strong>Servicios:</strong> {{ getNombresServicios() }}</p>
+            <p><strong>Duración total:</strong> {{ getDuracionTotal() }} minutos</p>
+            <p><strong>Fecha:</strong> {{ fechaSeleccionada | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Horario:</strong> {{ horaSeleccionada }}</p>
+            <p class="precio-total-resumen"><strong>💰 Total a pagar:</strong> ${{ getPrecioTotal().toLocaleString('es-AR') }}</p>
+          </div>
+
+          <div class="form-group">
+            <label>Notas (opcional):</label>
+            <textarea
+              [(ngModel)]="nuevoTurno.notas"
+              name="notas"
+              class="form-control"
+              rows="3"
+              placeholder="Deja aquí cualquier comentario o preferencia"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              Confirmar Reserva
+            </button>
+            <button type="button" (click)="resetFormulario()" class="btn-secondary">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="mis-turnos">
+      <h2>Mis Turnos</h2>
+      <div *ngIf="turnos.length > 0" class="turnos-lista">
+        <div *ngFor="let turno of turnos" class="turno-card">
+          <div class="turno-header">
+            <h3>{{ turno.fecha | date:'dd/MM/yyyy' }} - {{ turno.hora }}</h3>
+            <span [class]="getEstadoClass(turno.estado || 'pendiente')">
+              {{ turno.estado || 'pendiente' }}
+            </span>
+          </div>
+          <div class="turno-body">
+            <p><strong>Servicio:</strong> {{ turno.servicio_nombre || turno.servicio || 'No especificado' }}</p>
+            <p *ngIf="turno.duracion_minutos"><strong>Duración:</strong> {{ turno.duracion_minutos }} minutos</p>
+            <p *ngIf="turno.notas"><strong>Notas:</strong> {{ turno.notas }}</p>
+          </div>
+          <div class="turno-actions" *ngIf="turno.estado !== 'cancelado'">
+            <button
+              (click)="cancelarTurno(turno.id!)"
+              class="btn-cancel"
+            >
+              Cancelar Turno
+            </button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="turnos.length === 0" class="no-turnos">
+        No tienes turnos reservados. ¡Reserva uno ahora!
+      </div>
+    </section>
+  </main>
+</div>

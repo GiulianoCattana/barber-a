@@ -1,0 +1,156 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Panel de Administrador</h1>
+      <div class="user-info">
+        <span>Admin: {{ usuario?.nombre }}</span>
+        <button (click)="irGaleria()" class="btn-galeria">Galería</button>
+        <button (click)="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
+    <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <section class="estadisticas">
+      <h2>Estadísticas</h2>
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-number">{{ estadisticas.total }}</div>
+          <div class="stat-label">Total de Turnos</div>
+        </div>
+        <div class="stat-card pendiente">
+          <div class="stat-number">{{ estadisticas.pendientes }}</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card confirmado">
+          <div class="stat-number">{{ estadisticas.confirmados }}</div>
+          <div class="stat-label">Confirmados</div>
+        </div>
+        <div class="stat-card cancelado">
+          <div class="stat-number">{{ estadisticas.cancelados }}</div>
+          <div class="stat-label">Cancelados</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="gestion-turnos">
+      <h2>Gestión de Turnos</h2>
+
+      <!-- Selector de Días -->
+      <div class="dias-semana">
+        <button
+          *ngFor="let dia of diasDisponibles"
+          class="dia-btn"
+          [class.activo]="diaSeleccionado === dia.nombre"
+          (click)="seleccionarDia(dia)"
+        >
+          {{ dia.nombre }}
+          <span class="dia-fecha">{{ dia.fecha | date:'dd/MM' }}</span>
+        </button>
+      </div>
+
+      <!-- Turnos del Día Seleccionado -->
+      <div class="turnos-dia-container">
+        <div class="header-turnos-dia">
+          <h3 class="titulo-dia">
+            Turnos para {{ diaSeleccionado }} - {{ fechaSeleccionada | date:'dd/MM/yyyy' }}
+            <span class="contador-turnos">({{ turnosDia.length }} turnos)</span>
+          </h3>
+
+          <!-- Filtros de Estado -->
+          <div class="filtros-estado" *ngIf="turnosDia.length > 0">
+            <button
+              (click)="cambiarFiltroDia('todos')"
+              [class.active]="filtroEstado === 'todos'"
+              class="btn-filtro-dia"
+            >
+              Todos
+            </button>
+            <button
+              (click)="cambiarFiltroDia('pendiente')"
+              [class.active]="filtroEstado === 'pendiente'"
+              class="btn-filtro-dia pendiente"
+            >
+              Pendientes
+            </button>
+            <button
+              (click)="cambiarFiltroDia('confirmado')"
+              [class.active]="filtroEstado === 'confirmado'"
+              class="btn-filtro-dia confirmado"
+            >
+              Confirmados
+            </button>
+            <button
+              (click)="cambiarFiltroDia('cancelado')"
+              [class.active]="filtroEstado === 'cancelado'"
+              class="btn-filtro-dia cancelado"
+            >
+              Cancelados
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="turnosDiaFiltrados.length > 0" class="turnos-lista">
+          <div *ngFor="let turno of turnosDiaFiltrados" class="turno-card">
+            <div class="turno-header">
+              <div class="turno-info">
+                <h3>{{ turno.hora }}</h3>
+                <span [class]="getEstadoClass(turno.estado || 'pendiente')">
+                  {{ turno.estado || 'pendiente' }}
+                </span>
+              </div>
+            </div>
+            <div class="turno-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <strong>Cliente:</strong> {{ turno.cliente_nombre }}
+                </div>
+                <div class="info-item">
+                  <strong>Email:</strong> {{ turno.cliente_email }}
+                </div>
+                <div class="info-item">
+                  <strong>Teléfono:</strong> {{ turno.cliente_telefono || 'No proporcionado' }}
+                </div>
+                <div class="info-item">
+                  <strong>Servicio:</strong> {{ turno.servicio || turno.servicio_nombre || 'No especificado' }}
+                </div>
+                <div class="info-item" *ngIf="turno.duracion_minutos">
+                  <strong>Duración:</strong> {{ turno.duracion_minutos }} minutos
+                </div>
+              </div>
+              <div *ngIf="turno.notas" class="turno-notas">
+                <strong>Notas:</strong> {{ turno.notas }}
+              </div>
+            </div>
+            <div class="turno-actions" *ngIf="turno.estado !== 'cancelado'">
+              <button
+                *ngIf="turno.estado === 'pendiente'"
+                (click)="confirmarTurno(turno.id!)"
+                class="btn-confirmar"
+              >
+                Confirmar
+              </button>
+              <button
+                (click)="cancelarTurno(turno.id!)"
+                class="btn-cancelar"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="turnosDia.length > 0 && turnosDiaFiltrados.length === 0" class="no-turnos">
+          No hay turnos {{ filtroEstado !== 'todos' ? filtroEstado + 's' : '' }} para {{ diaSeleccionado }}.
+        </div>
+
+        <div *ngIf="turnosDia.length === 0" class="no-turnos">
+          No hay turnos para {{ diaSeleccionado }}.
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

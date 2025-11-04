@@ -1,0 +1,100 @@
+<div class="galeria">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Galería de Trabajos</h1>
+      <div class="user-info">
+        <span>{{ usuario?.nombre }}</span>
+        <button (click)="volverDashboard()" class="btn-back">Volver al Dashboard</button>
+        <button (click)="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <!-- Alerts -->
+    <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
+    <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <!-- Add Item Button -->
+    <div class="section-header">
+      <h2>Gestionar Galería</h2>
+      <button (click)="abrirFormulario()" class="btn-primary">Agregar Nuevo Item</button>
+    </div>
+
+    <!-- Form Modal -->
+    <div *ngIf="mostrarFormulario" class="modal-overlay" (click)="cerrarFormulario()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>{{ editando ? 'Editar Item' : 'Nuevo Item' }}</h3>
+        <form (ngSubmit)="guardarItem()">
+          <div class="form-group">
+            <label for="titulo">Título:</label>
+            <input
+              type="text"
+              id="titulo"
+              [(ngModel)]="itemActual.titulo"
+              name="titulo"
+              class="form-control"
+              placeholder="Ej: Corte Moderno"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea
+              id="descripcion"
+              [(ngModel)]="itemActual.descripcion"
+              name="descripcion"
+              class="form-control"
+              placeholder="Describe el trabajo realizado..."
+              rows="4"
+              required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="imagen">Imagen:</label>
+            <input
+              type="file"
+              id="imagen"
+              (change)="onFileSelected($event)"
+              accept="image/*"
+              class="form-control-file">
+            <small class="form-text">{{ editando ? 'Selecciona una nueva imagen solo si deseas cambiarla' : 'Selecciona una imagen' }}</small>
+          </div>
+
+          <div *ngIf="editando && itemActual.url_imagen" class="preview-actual">
+            <p>Imagen actual:</p>
+            <img [src]="'http://localhost:3000' + itemActual.url_imagen" alt="{{ itemActual.titulo }}">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">{{ editando ? 'Actualizar' : 'Crear' }}</button>
+            <button type="button" (click)="cerrarFormulario()" class="btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="galeria-grid" *ngIf="items.length > 0">
+      <div *ngFor="let item of items" class="galeria-card">
+        <div class="imagen-container">
+          <img [src]="'http://localhost:3000' + item.url_imagen" [alt]="item.titulo">
+        </div>
+        <div class="card-body">
+          <h3>{{ item.titulo }}</h3>
+          <p>{{ item.descripcion }}</p>
+          <div class="card-actions">
+            <button (click)="editarItem(item)" class="btn-edit">Editar</button>
+            <button (click)="eliminarItem(item.id!)" class="btn-delete">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="items.length === 0" class="no-items">
+      <p>No hay items en la galería. Agrega tu primer trabajo!</p>
+    </div>
+  </div>
+</div>
