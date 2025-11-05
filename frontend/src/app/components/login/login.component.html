@@ -1,4 +1,8 @@
 <div class="login-container">
+  <button class="theme-toggle" (click)="themeService.toggleTheme()">
+    {{ themeService.isDarkMode() ? '☀️' : '🌙' }}
+  </button>
+
   <div class="login-card">
     <h2>Iniciar Sesión</h2>
     <p class="subtitle">Sistema de Gestión de Peluquería</p>
@@ -43,6 +47,10 @@
         {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
       </button>
     </form>
+
+    <div class="forgot-password-link">
+      <a routerLink="/recuperar-password">¿Olvidaste tu contraseña?</a>
+    </div>
 
     <div class="register-link">
       ¿No tienes cuenta?

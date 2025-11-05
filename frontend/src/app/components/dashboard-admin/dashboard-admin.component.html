@@ -1,4 +1,8 @@
 <div class="dashboard">
+  <button class="theme-toggle" (click)="themeService.toggleTheme()">
+    {{ themeService.isDarkMode() ? '☀️' : '🌙' }}
+  </button>
+
   <header class="dashboard-header">
     <div class="header-content">
       <h1>Panel de Administrador</h1>
@@ -14,6 +18,36 @@
     <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
     <div *ngIf="error" class="alert-error">{{ error }}</div>
 
+    <!-- Navegación de Vistas -->
+    <div class="vista-navegacion">
+      <button
+        class="vista-btn"
+        [class.activo]="vistaActual === 'turnos'"
+        (click)="cambiarVista('turnos')">
+        Gestión de Turnos
+      </button>
+      <button
+        class="vista-btn"
+        [class.activo]="vistaActual === 'clientes'"
+        (click)="cambiarVista('clientes')">
+        Historial de Clientes
+      </button>
+      <button
+        class="vista-btn"
+        [class.activo]="vistaActual === 'servicios'"
+        (click)="cambiarVista('servicios')">
+        Gestión de Servicios
+      </button>
+      <button
+        class="vista-btn"
+        [class.activo]="vistaActual === 'perfil'"
+        (click)="cambiarVista('perfil')">
+        Mi Perfil
+      </button>
+    </div>
+
+    <!-- Vista de Turnos -->
+    <div *ngIf="vistaActual === 'turnos'">
     <section class="estadisticas">
       <h2>Estadísticas</h2>
       <div class="stats-grid">
@@ -152,5 +186,216 @@
         </div>
       </div>
     </section>
+
+    <!-- Sección de Bloqueo de Horarios -->
+    <section class="bloqueo-horarios" *ngIf="fechaSeleccionada">
+      <h2>Gestión de Horarios - {{ diaSeleccionado }}</h2>
+      <p class="subtitle">Bloquea horarios para que los clientes no puedan reservar</p>
+
+      <div class="horarios-grid">
+        <div
+          *ngFor="let hora of obtenerHorariosTrabajo()"
+          class="horario-slot"
+          [class.bloqueado]="estaHorarioBloqueado(hora)"
+          [class.ocupado]="tieneTurnoEnHorario(hora)">
+
+          <div class="horario-hora">{{ hora }}</div>
+
+          <div class="horario-estado" *ngIf="tieneTurnoEnHorario(hora)">
+            <span class="badge ocupado">Turno Reservado</span>
+          </div>
+
+          <div class="horario-estado" *ngIf="estaHorarioBloqueado(hora) && !tieneTurnoEnHorario(hora)">
+            <span class="badge bloqueado">🔒 Bloqueado</span>
+            <button
+              class="btn-desbloquear"
+              (click)="desbloquearHorario(hora)">
+              Desbloquear
+            </button>
+          </div>
+
+          <div class="horario-estado" *ngIf="!estaHorarioBloqueado(hora) && !tieneTurnoEnHorario(hora)">
+            <span class="badge disponible">Disponible</span>
+            <button
+              class="btn-bloquear"
+              (click)="bloquearHorario(hora)">
+              Bloquear
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- Vista de Historial de Clientes -->
+    <div *ngIf="vistaActual === 'clientes'" class="vista-clientes">
+      <section class="busqueda-clientes">
+        <div class="section-header">
+          <h2>📋 Historial de Clientes</h2>
+          <p class="subtitle">Busca y consulta el historial completo de turnos de tus clientes</p>
+        </div>
+
+        <div class="search-container">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              [(ngModel)]="busquedaCliente"
+              (ngModelChange)="onBusquedaChange()"
+              (keyup.enter)="buscarCliente()"
+              (blur)="cerrarSugerencias()"
+              placeholder="Buscar por nombre, email o teléfono..."
+              class="search-input"
+              autocomplete="off">
+            <button (click)="buscarCliente()" class="btn-buscar" [disabled]="buscando">
+              <span *ngIf="!buscando">Buscar</span>
+              <span *ngIf="buscando">...</span>
+            </button>
+          </div>
+
+          <!-- Sugerencias de autocompletado -->
+          <div *ngIf="mostrarSugerencias" class="sugerencias-dropdown">
+            <div
+              *ngFor="let cliente of clientesSugeridos"
+              class="sugerencia-item"
+              (mousedown)="seleccionarCliente(cliente)">
+              <div class="sugerencia-avatar">
+                {{ cliente.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <div class="sugerencia-info">
+                <strong>{{ cliente.nombre }}</strong>
+                <span class="sugerencia-email">{{ cliente.email }}</span>
+                <span class="sugerencia-telefono" *ngIf="cliente.telefono">📞 {{ cliente.telefono }}</span>
+              </div>
+              <div class="sugerencia-badge">
+                {{ cliente.total_turnos }} turnos
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="buscando" class="loading-search">
+            Buscando...
+          </div>
+        </div>
+
+        <div *ngIf="clienteBuscado" class="cliente-info-card">
+          <div class="card-header">
+            <div class="avatar-circle">
+              {{ clienteBuscado.nombre.charAt(0).toUpperCase() }}
+            </div>
+            <div class="cliente-datos">
+              <h3>{{ clienteBuscado.nombre }}</h3>
+              <p class="email">{{ clienteBuscado.email }}</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="icon">📞</span>
+                <div>
+                  <p class="label">Teléfono</p>
+                  <p class="value">{{ clienteBuscado.telefono || 'No proporcionado' }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="icon">📅</span>
+                <div>
+                  <p class="label">Total de Turnos</p>
+                  <p class="value">{{ historialCliente.length }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="historialCliente.length > 0" class="historial-section">
+          <div class="historial-header">
+            <h3>📆 Historial de Turnos</h3>
+            <span class="total-badge">{{ historialFiltrado().length }} turno(s)</span>
+          </div>
+
+          <div class="filtros-historial">
+            <button
+              (click)="filtroHistorial = 'todos'"
+              [class.active]="filtroHistorial === 'todos'"
+              class="btn-filtro">
+              <span class="badge-count">{{ historialCliente.length }}</span>
+              Todos
+            </button>
+            <button
+              (click)="filtroHistorial = 'confirmado'"
+              [class.active]="filtroHistorial === 'confirmado'"
+              class="btn-filtro confirmado">
+              <span class="badge-count">{{ contarPorEstado('confirmado') }}</span>
+              Confirmados
+            </button>
+            <button
+              (click)="filtroHistorial = 'completado'"
+              [class.active]="filtroHistorial === 'completado'"
+              class="btn-filtro completado">
+              <span class="badge-count">{{ contarPorEstado('completado') }}</span>
+              Completados
+            </button>
+            <button
+              (click)="filtroHistorial = 'cancelado'"
+              [class.active]="filtroHistorial === 'cancelado'"
+              class="btn-filtro cancelado">
+              <span class="badge-count">{{ contarPorEstado('cancelado') }}</span>
+              Cancelados
+            </button>
+          </div>
+
+          <div class="turnos-timeline">
+            <div *ngFor="let turno of historialFiltrado()" class="timeline-item">
+              <div class="timeline-marker" [class]="getEstadoClass(turno.estado)"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="fecha-hora">
+                    <span class="fecha">{{ turno.fecha | date:'EEE, dd MMM yyyy' }}</span>
+                    <span class="hora">🕐 {{ turno.hora }}</span>
+                  </div>
+                  <span class="estado-badge" [class]="getEstadoClass(turno.estado)">
+                    {{ turno.estado }}
+                  </span>
+                </div>
+                <div class="timeline-body">
+                  <h4>{{ turno.servicio }}</h4>
+                  <div class="detalles">
+                    <span *ngIf="turno.duracion_minutos" class="detalle-item">
+                      ⏱️ {{ turno.duracion_minutos }} minutos
+                    </span>
+                    <span *ngIf="turno.notas" class="detalle-item">
+                      📝 {{ turno.notas }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="historialFiltrado().length === 0" class="no-resultados-filtro">
+            <span class="icon">🔍</span>
+            <p>No hay turnos {{ filtroHistorial !== 'todos' ? filtroHistorial + 's' : '' }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="busquedaRealizada && !clienteBuscado" class="no-resultados">
+          <span class="icon">❌</span>
+          <h3>Cliente no encontrado</h3>
+          <p>No se encontró ningún cliente con el email: <strong>{{ busquedaCliente }}</strong></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Vista de Servicios -->
+    <div *ngIf="vistaActual === 'servicios'">
+      <app-servicios-manager (volverDashboard)="cambiarVista('turnos')"></app-servicios-manager>
+    </div>
+
+    <!-- Vista de Perfil -->
+    <div *ngIf="vistaActual === 'perfil'">
+      <app-perfil-admin (volverDashboard)="cambiarVista('turnos')"></app-perfil-admin>
+    </div>
+
   </main>
 </div>

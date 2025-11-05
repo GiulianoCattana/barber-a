@@ -1031,3 +1031,276 @@ h2 {
     align-items: flex-start;
   }
 }
+
+/* ====================== MODO OSCURO - Wonder Barbershop ====================== */
+body.dark-theme .dashboard {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+body.dark-theme .dashboard-header {
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 3px solid #ff6b35;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+}
+
+body.dark-theme .dashboard-content {
+  background: transparent;
+}
+
+body.dark-theme .reservar-turno,
+body.dark-theme .mis-turnos {
+  background: #1a1a1a;
+  border: 2px solid #ff6b35;
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+}
+
+body.dark-theme .reservar-turno:hover,
+body.dark-theme .mis-turnos:hover {
+  background: #2d2d2d;
+  box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+}
+
+body.dark-theme h2,
+body.dark-theme h3 {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+  border-bottom-color: #ff6b35;
+}
+
+body.dark-theme .paso-servicio,
+body.dark-theme .paso-dia,
+body.dark-theme .paso-hora {
+  background: #1a1a1a;
+  border: 2px solid #ff6b35;
+}
+
+body.dark-theme .servicios-grid {
+  background: #1a1a1a;
+}
+
+body.dark-theme .servicio-card {
+  background: #2d2d2d;
+  border: 2px solid #444;
+}
+
+body.dark-theme .servicio-card:hover {
+  border-color: #ff6b35;
+  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+  transform: translateY(-5px);
+}
+
+body.dark-theme .servicio-card.selected {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  border-color: #ff6b35;
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.6);
+}
+
+body.dark-theme .servicio-nombre,
+body.dark-theme .servicio-duracion,
+body.dark-theme .servicio-precio {
+  color: #e4e4e7;
+}
+
+body.dark-theme .servicio-card.selected .servicio-nombre,
+body.dark-theme .servicio-card.selected .servicio-duracion,
+body.dark-theme .servicio-card.selected .servicio-precio {
+  color: white;
+}
+
+body.dark-theme .seleccion-actual {
+  background: #1a1a1a;
+  border-left: 4px solid #ff6b35;
+}
+
+body.dark-theme .seleccion-info,
+body.dark-theme .detalle-item {
+  color: #ffffff;
+}
+
+body.dark-theme .dias-grid {
+  background: #1a1a1a;
+}
+
+body.dark-theme .dia-card {
+  background: #2d2d2d;
+  border: 2px solid #444;
+  color: #ffffff;
+}
+
+body.dark-theme .dia-card:hover {
+  border-color: #ff6b35;
+  box-shadow: 0 6px 15px rgba(255, 107, 53, 0.4);
+  transform: translateY(-3px);
+}
+
+body.dark-theme .dia-card.selected {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  border-color: #ff6b35;
+  color: white;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+}
+
+body.dark-theme .horarios-grid {
+  background: #1a1a1a;
+}
+
+body.dark-theme .horario-btn {
+  background: #2d2d2d;
+  border: 2px solid #444;
+  color: #ffffff;
+}
+
+body.dark-theme .horario-btn:hover:not(:disabled) {
+  background: #3a3a3a;
+  border-color: #ff6b35;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+body.dark-theme .horario-btn.selected {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  border-color: #ff6b35;
+  color: white;
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+}
+
+body.dark-theme .horario-btn:disabled {
+  background: #1a1a1a;
+  border-color: #333;
+  color: #666;
+}
+
+body.dark-theme .form-group label {
+  color: #ffffff;
+}
+
+body.dark-theme .form-control,
+body.dark-theme textarea {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  color: #ffffff;
+}
+
+body.dark-theme .form-control:focus,
+body.dark-theme textarea:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+}
+
+body.dark-theme .form-control::placeholder,
+body.dark-theme textarea::placeholder {
+  color: #888;
+}
+
+body.dark-theme .resumen-turno {
+  background: #2d2d2d;
+  border-left: 4px solid #ff6b35;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2);
+}
+
+body.dark-theme .resumen-item {
+  color: #ffffff;
+}
+
+body.dark-theme .resumen-item strong {
+  color: #ff8c42;
+}
+
+body.dark-theme .turno-card {
+  background: #1a1a1a;
+  border: 2px solid #ff6b35;
+  border-left: 4px solid #ff6b35;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+}
+
+body.dark-theme .turno-card:hover {
+  background: #2d2d2d;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+}
+
+body.dark-theme .turno-header {
+  border-bottom: 2px solid #ff6b35;
+}
+
+body.dark-theme .turno-header h3 {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+}
+
+body.dark-theme .turno-body p {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+body.dark-theme .turno-body strong {
+  color: #ff8c42;
+  font-weight: 700;
+}
+
+body.dark-theme .turno-info p {
+  color: #ffffff;
+}
+
+body.dark-theme .turno-info strong {
+  color: #ff8c42;
+}
+
+body.dark-theme .badge {
+  border: 2px solid #ff6b35;
+}
+
+body.dark-theme .estado-confirmado {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: 2px solid #10b981;
+}
+
+body.dark-theme .estado-pendiente {
+  background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+  color: white;
+  border: 2px solid #ff8c42;
+}
+
+body.dark-theme .estado-cancelado {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: 2px solid #ef4444;
+}
+
+body.dark-theme .estado-completado {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  border: 2px solid #6b7280;
+}
+
+body.dark-theme .btn-cancelar {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border: 2px solid #dc2626;
+  color: white;
+  font-weight: 600;
+}
+
+body.dark-theme .btn-cancelar:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6);
+  transform: translateY(-2px);
+}
+
+body.dark-theme .alert-success {
+  background-color: #1a3a1a;
+  color: #6ee7b7;
+  border-left: 4px solid #10b981;
+}
+
+body.dark-theme .alert-error {
+  background-color: #3a1a1a;
+  color: #fca5a5;
+  border-left: 4px solid #ff6b35;
+}
+
+body.dark-theme .no-turnos {
+  color: #ffffff;
+  background: #2d2d2d;
+  padding: 3rem;
+  border-radius: 15px;
+  border: 2px dashed #ff6b35;
+}

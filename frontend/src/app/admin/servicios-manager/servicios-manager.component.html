@@ -1,0 +1,120 @@
+<div class="servicios-manager">
+  <div class="header">
+    <div class="header-left">
+      <button class="btn-volver" (click)="volver()">← Volver al Dashboard</button>
+      <h2>Gestión de Servicios</h2>
+    </div>
+    <button class="btn-nuevo" (click)="mostrarFormNuevo()">+ Nuevo Servicio</button>
+  </div>
+
+  <!-- Formulario de Creación/Edición -->
+  <div class="formulario-overlay" *ngIf="mostrarFormulario">
+    <div class="formulario-container">
+      <h3>{{ modoEdicion ? 'Editar Servicio' : 'Nuevo Servicio' }}</h3>
+
+      <form (ngSubmit)="guardarServicio()">
+        <div class="form-group">
+          <label for="nombre">Nombre *</label>
+          <input
+            type="text"
+            id="nombre"
+            [(ngModel)]="nuevoServicio.nombre"
+            name="nombre"
+            required
+            placeholder="Ej: Corte de Cabello">
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea
+            id="descripcion"
+            [(ngModel)]="nuevoServicio.descripcion"
+            name="descripcion"
+            rows="3"
+            placeholder="Descripción del servicio"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="precio">Precio ($) *</label>
+            <input
+              type="number"
+              id="precio"
+              [(ngModel)]="nuevoServicio.precio"
+              name="precio"
+              required
+              min="0"
+              step="0.01"
+              placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="duracion">Duración (min) *</label>
+            <input
+              type="number"
+              id="duracion"
+              [(ngModel)]="nuevoServicio.duracion"
+              name="duracion"
+              required
+              min="5"
+              step="5"
+              placeholder="30">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancelar" (click)="cancelar()">Cancelar</button>
+          <button type="submit" class="btn-guardar">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de Servicios -->
+  <div class="servicios-lista">
+    <div class="servicios-grid">
+      <div *ngFor="let servicio of servicios" class="servicio-card" [class.inactivo]="!servicio.activo">
+        <div class="servicio-header">
+          <h3>{{ servicio.nombre }}</h3>
+          <span class="badge" [class.badge-activo]="servicio.activo" [class.badge-inactivo]="!servicio.activo">
+            {{ servicio.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <p class="servicio-descripcion">{{ servicio.descripcion || 'Sin descripción' }}</p>
+
+        <div class="servicio-info">
+          <div class="info-item">
+            <span class="label">Precio:</span>
+            <span class="value">${{ servicio.precio }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Duración:</span>
+            <span class="value">{{ servicio.duracion }} min</span>
+          </div>
+        </div>
+
+        <div class="servicio-acciones">
+          <button class="btn-editar" (click)="editarServicio(servicio)">Editar</button>
+          <button
+            *ngIf="servicio.activo"
+            class="btn-eliminar"
+            (click)="eliminarServicio(servicio.id!)">
+            Desactivar
+          </button>
+          <button
+            *ngIf="!servicio.activo"
+            class="btn-activar"
+            (click)="activarServicio(servicio.id!)">
+            Activar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="servicios.length === 0" class="sin-servicios">
+      <p>No hay servicios registrados</p>
+      <button class="btn-nuevo" (click)="mostrarFormNuevo()">Crear primer servicio</button>
+    </div>
+  </div>
+</div>

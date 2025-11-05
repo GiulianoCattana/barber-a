@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class LoginComponent implements OnInit {
   email: string = '';
@@ -19,7 +21,8 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
@@ -49,7 +52,15 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.mensaje || 'Error al iniciar sesión';
+
+        // Si el email no está verificado, redirigir a verificación
+        if (error.status === 403 && error.error?.requiresVerification) {
+          this.router.navigate(['/verificar-email'], {
+            queryParams: { email: error.error.email || this.email }
+          });
+        } else {
+          this.errorMessage = error.error?.mensaje || 'Error al iniciar sesión';
+        }
       }
     });
   }

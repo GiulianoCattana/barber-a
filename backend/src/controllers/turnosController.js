@@ -63,7 +63,7 @@ const obtenerTurnos = async (req, res) => {
                u.email as cliente_email,
                u.telefono as cliente_telefono,
                s.nombre as servicio_nombre,
-               s.duracion_minutos
+               s.duracion
         FROM turnos t
         LEFT JOIN usuarios u ON t.cliente_id = u.id
         LEFT JOIN servicios s ON t.servicio_id = s.id
@@ -75,7 +75,7 @@ const obtenerTurnos = async (req, res) => {
       query = `
         SELECT t.*,
                s.nombre as servicio_nombre,
-               s.duracion_minutos
+               s.duracion
         FROM turnos t
         LEFT JOIN servicios s ON t.servicio_id = s.id
         WHERE t.cliente_id = $1 AND t.estado != 'completado'
@@ -108,11 +108,11 @@ const obtenerTurnosDisponibles = async (req, res) => {
     } else if (servicio_id) {
       // Si solo viene servicio_id, buscar su duración
       const servicioResult = await pool.query(
-        'SELECT duracion_minutos FROM servicios WHERE id = $1',
+        'SELECT duracion FROM servicios WHERE id = $1',
         [servicio_id]
       );
       if (servicioResult.rows.length > 0) {
-        duracionRequerida = servicioResult.rows[0].duracion_minutos;
+        duracionRequerida = servicioResult.rows[0].duracion;
       }
     }
 
@@ -154,13 +154,25 @@ const obtenerTurnosDisponibles = async (req, res) => {
 
     console.log('Turnos reservados encontrados:', turnosReservados.rows.length);
 
-    // Crear un Set con todos los slots ocupados
+    // Obtener todos los horarios bloqueados para esa fecha
+    const horariosBloqueados = await pool.query(
+      'SELECT hora FROM horarios_bloqueados WHERE fecha = $1',
+      [fecha]
+    );
+
+    // Crear un Set con todos los slots ocupados (turnos + bloqueados)
     const slotsOcupados = new Set();
     turnosReservados.rows.forEach(turno => {
       const horaStr = turno.hora.toString().substring(0, 5);
       const duracion = turno.duracion_minutos || 30;
       const slots = obtenerSlotsOcupados(horaStr, duracion);
       slots.forEach(slot => slotsOcupados.add(slot));
+    });
+
+    // Agregar slots bloqueados
+    horariosBloqueados.rows.forEach(bloqueado => {
+      const horaStr = bloqueado.hora.toString().substring(0, 5);
+      slotsOcupados.add(horaStr);
     });
 
     console.log('Slots ocupados:', Array.from(slotsOcupados));
@@ -215,7 +227,7 @@ const crearTurno = async (req, res) => {
     } else {
       // Un solo servicio
       const servicioResult = await client.query(
-        'SELECT nombre, duracion_minutos FROM servicios WHERE id = $1',
+        'SELECT nombre, duracion FROM servicios WHERE id = $1',
         [servicio_id]
       );
 
@@ -225,7 +237,7 @@ const crearTurno = async (req, res) => {
       }
 
       const servicioData = servicioResult.rows[0];
-      duracionMinutos = servicioData.duracion_minutos;
+      duracionMinutos = servicioData.duracion;
       nombreServicio = servicio || servicioData.nombre;
     }
 
@@ -273,27 +285,46 @@ const crearTurno = async (req, res) => {
     const slotsNecesarios = obtenerSlotsOcupados(hora, duracionMinutos);
     console.log('Slots necesarios:', slotsNecesarios);
 
-    // Verificar que TODOS los slots necesarios estén libres
+    // Verificar que ninguno de los slots necesarios esté bloqueado
     for (const slot of slotsNecesarios) {
-      const turnoExistente = await client.query(
-        `SELECT t.id, t.hora, t.duracion_minutos
-         FROM turnos t
-         WHERE t.fecha = $1 AND t.estado != $2`,
-        [fecha, 'cancelado']
+      const bloqueado = await client.query(
+        'SELECT id, motivo FROM horarios_bloqueados WHERE fecha = $1 AND hora = $2',
+        [fecha, slot]
       );
 
-      // Verificar si algún turno existente ocupa este slot
-      for (const turno of turnoExistente.rows) {
-        const horaExistente = turno.hora.toString().substring(0, 5);
-        const duracionExistente = turno.duracion_minutos || 30;
-        const slotsExistentes = obtenerSlotsOcupados(horaExistente, duracionExistente);
+      if (bloqueado.rows.length > 0) {
+        await client.query('ROLLBACK');
+        const motivo = bloqueado.rows[0].motivo || 'No disponible';
+        return res.status(400).json({
+          mensaje: `El horario ${hora} no está disponible. ${motivo}`
+        });
+      }
+    }
 
-        if (slotsExistentes.includes(slot)) {
-          await client.query('ROLLBACK');
-          return res.status(400).json({
-            mensaje: `El horario ${hora} no está disponible para un servicio de ${duracionMinutos} minutos. Algunos slots ya están ocupados.`
-          });
-        }
+    // Obtener todos los turnos activos (no cancelados) para esa fecha
+    const turnosExistentes = await client.query(
+      `SELECT t.id, t.hora, t.duracion_minutos
+       FROM turnos t
+       WHERE t.fecha = $1 AND t.estado != $2`,
+      [fecha, 'cancelado']
+    );
+
+    // Crear un Set con todos los slots ocupados por turnos existentes
+    const slotsOcupados = new Set();
+    turnosExistentes.rows.forEach(turno => {
+      const horaExistente = turno.hora.toString().substring(0, 5);
+      const duracionExistente = turno.duracion_minutos || 30;
+      const slotsExistentes = obtenerSlotsOcupados(horaExistente, duracionExistente);
+      slotsExistentes.forEach(slot => slotsOcupados.add(slot));
+    });
+
+    // Verificar que TODOS los slots necesarios estén libres
+    for (const slot of slotsNecesarios) {
+      if (slotsOcupados.has(slot)) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          mensaje: `El horario ${hora} no está disponible para un servicio de ${duracionMinutos} minutos. Algunos slots ya están ocupados.`
+        });
       }
     }
 
@@ -381,10 +412,116 @@ const cancelarTurno = async (req, res) => {
   }
 };
 
+// Buscar cliente por email y obtener su historial
+const buscarClientePorEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    // Buscar el cliente
+    const cliente = await pool.query(
+      'SELECT id, nombre, email, telefono FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (cliente.rows.length === 0) {
+      return res.json({ cliente: null, turnos: [] });
+    }
+
+    // Obtener todos los turnos del cliente (ordenados por fecha descendente)
+    const turnos = await pool.query(`
+      SELECT t.*, s.nombre as servicio_nombre
+      FROM turnos t
+      LEFT JOIN servicios s ON t.servicio_id = s.id
+      WHERE t.cliente_id = $1
+      ORDER BY t.fecha DESC, t.hora DESC
+    `, [cliente.rows[0].id]);
+
+    res.json({
+      cliente: cliente.rows[0],
+      turnos: turnos.rows
+    });
+  } catch (error) {
+    console.error('Error al buscar cliente:', error);
+    res.status(500).json({ mensaje: 'Error al buscar cliente' });
+  }
+};
+
+// Buscar clientes por nombre, email o teléfono (búsqueda en tiempo real)
+const buscarClientes = async (req, res) => {
+  try {
+    const { q } = req.query; // q = query de búsqueda
+
+    if (!q || q.trim().length < 2) {
+      return res.json({ clientes: [] });
+    }
+
+    const searchTerm = `%${q.trim()}%`;
+
+    // Buscar clientes que coincidan con nombre, email o teléfono
+    const clientes = await pool.query(`
+      SELECT DISTINCT u.id, u.nombre, u.email, u.telefono,
+             COUNT(t.id) as total_turnos
+      FROM usuarios u
+      LEFT JOIN turnos t ON u.id = t.cliente_id
+      WHERE u.rol = 'cliente'
+        AND (
+          LOWER(u.nombre) LIKE LOWER($1) OR
+          LOWER(u.email) LIKE LOWER($1) OR
+          u.telefono LIKE $1
+        )
+      GROUP BY u.id, u.nombre, u.email, u.telefono
+      ORDER BY u.nombre
+      LIMIT 10
+    `, [searchTerm]);
+
+    res.json({ clientes: clientes.rows });
+  } catch (error) {
+    console.error('Error al buscar clientes:', error);
+    res.status(500).json({ mensaje: 'Error al buscar clientes' });
+  }
+};
+
+// Obtener historial de turnos de un cliente por ID
+const obtenerHistorialCliente = async (req, res) => {
+  try {
+    const { clienteId } = req.params;
+
+    // Buscar el cliente
+    const cliente = await pool.query(
+      'SELECT id, nombre, email, telefono FROM usuarios WHERE id = $1',
+      [clienteId]
+    );
+
+    if (cliente.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Cliente no encontrado' });
+    }
+
+    // Obtener todos los turnos del cliente
+    const turnos = await pool.query(`
+      SELECT t.*, s.nombre as servicio_nombre, s.duracion_minutos
+      FROM turnos t
+      LEFT JOIN servicios s ON t.servicio_id = s.id
+      WHERE t.cliente_id = $1
+      ORDER BY t.fecha DESC, t.hora DESC
+    `, [clienteId]);
+
+    res.json({
+      cliente: cliente.rows[0],
+      turnos: turnos.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener historial:', error);
+    res.status(500).json({ mensaje: 'Error al obtener historial' });
+  }
+};
+
 module.exports = {
   obtenerTurnos,
   obtenerTurnosDisponibles,
   crearTurno,
   actualizarEstadoTurno,
-  cancelarTurno
+  cancelarTurno,
+  buscarClientePorEmail,
+  buscarClientes,
+  obtenerHistorialCliente
 };

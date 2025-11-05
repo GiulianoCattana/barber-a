@@ -87,6 +87,22 @@ label {
   text-align: center;
 }
 
+.forgot-password-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.forgot-password-link a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
+}
+
 .register-link {
   text-align: center;
   margin-top: 20px;
@@ -102,4 +118,64 @@ label {
 
 .register-link a:hover {
   text-decoration: underline;
+}
+
+/* MODO OSCURO - Wonder Barbershop */
+body.dark-theme .login-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+body.dark-theme .login-card {
+  background: #2d2d2d;
+  border: 3px solid #ff6b35;
+  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.4);
+}
+
+body.dark-theme h2 {
+  color: #ffffff;
+  text-shadow: 0 2px 15px rgba(255, 107, 53, 0.5);
+}
+
+body.dark-theme .subtitle {
+  color: #ff8c42;
+}
+
+body.dark-theme label {
+  color: #ffffff;
+}
+
+body.dark-theme .form-control {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  color: #ffffff;
+}
+
+body.dark-theme .form-control:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
+}
+
+body.dark-theme .form-control::placeholder {
+  color: #888;
+}
+
+body.dark-theme .error-message {
+  background-color: #3a1a1a;
+  color: #fca5a5;
+  border: 2px solid #ff6b35;
+}
+
+body.dark-theme .register-link {
+  color: #ffffff;
+}
+
+body.dark-theme .register-link a,
+body.dark-theme .forgot-password-link a {
+  color: #ff8c42;
+}
+
+body.dark-theme .register-link a:hover,
+body.dark-theme .forgot-password-link a:hover {
+  color: #ff6b35;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
 }

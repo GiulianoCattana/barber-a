@@ -59,4 +59,18 @@ export class TurnosService {
   cancelarTurno(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  buscarClientePorEmail(email: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/cliente/${encodeURIComponent(email)}`);
+  }
+
+  // Buscar clientes en tiempo real por nombre, email o teléfono
+  buscarClientes(query: string): Observable<{ clientes: any[] }> {
+    return this.http.get<{ clientes: any[] }>(`${this.apiUrl}/buscar/clientes?q=${encodeURIComponent(query)}`);
+  }
+
+  // Obtener historial de un cliente por ID
+  obtenerHistorialCliente(clienteId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/historial/${clienteId}`);
+  }
 }

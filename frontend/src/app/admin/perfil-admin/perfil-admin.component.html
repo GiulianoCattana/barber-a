@@ -1,0 +1,97 @@
+<div class="perfil-container">
+  <div class="perfil-header">
+    <h2>Mi Perfil</h2>
+    <button class="btn-volver" (click)="volver()">← Volver al Dashboard</button>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="mensaje" class="alert alert-success">{{ mensaje }}</div>
+  <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+
+  <!-- Información del Usuario -->
+  <div class="perfil-card">
+    <h3>Información de la Cuenta</h3>
+
+    <!-- Email de Recuperación -->
+    <div class="perfil-section">
+      <div class="section-header">
+        <div>
+          <label>Email de Recuperación</label>
+          <p class="section-description">Este email se usará para recuperar tu contraseña si la olvidas</p>
+        </div>
+        <button *ngIf="!editandoEmail" class="btn-editar" (click)="editandoEmail = true">Editar</button>
+      </div>
+
+      <div *ngIf="!editandoEmail" class="info-display">
+        <span class="email-actual">{{ usuario?.email || 'No configurado' }}</span>
+      </div>
+
+      <div *ngIf="editandoEmail" class="form-edit">
+        <input
+          type="email"
+          [(ngModel)]="emailRecuperacion"
+          placeholder="tu-email@gmail.com"
+          class="form-control">
+        <div class="form-actions">
+          <button class="btn-cancelar" (click)="cancelarEdicionEmail()">Cancelar</button>
+          <button class="btn-guardar" (click)="guardarEmail()" [disabled]="cargando">
+            {{ cargando ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cambiar Contraseña -->
+    <div class="perfil-section">
+      <div class="section-header">
+        <div>
+          <label>Contraseña</label>
+          <p class="section-description">Actualiza tu contraseña de acceso</p>
+        </div>
+        <button *ngIf="!cambiandoPassword" class="btn-editar" (click)="cambiandoPassword = true">Cambiar</button>
+      </div>
+
+      <div *ngIf="!cambiandoPassword" class="info-display">
+        <span class="password-hidden">••••••••</span>
+      </div>
+
+      <div *ngIf="cambiandoPassword" class="form-edit">
+        <input
+          type="password"
+          [(ngModel)]="passwordActual"
+          placeholder="Contraseña actual"
+          class="form-control">
+        <input
+          type="password"
+          [(ngModel)]="passwordNueva"
+          placeholder="Nueva contraseña (mín. 6 caracteres)"
+          class="form-control">
+        <input
+          type="password"
+          [(ngModel)]="passwordConfirmar"
+          placeholder="Confirmar nueva contraseña"
+          class="form-control">
+        <div class="form-actions">
+          <button class="btn-cancelar" (click)="cancelarCambioPassword()">Cancelar</button>
+          <button class="btn-guardar" (click)="cambiarPassword()" [disabled]="cargando">
+            {{ cargando ? 'Cambiando...' : 'Cambiar Contraseña' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="perfil-section">
+      <label>Rol</label>
+      <div class="info-display">
+        <span class="rol-badge">{{ usuario?.rol === 'admin' ? 'Administrador' : 'Cliente' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nota informativa -->
+  <div class="info-box">
+    <h4>💡 Importante</h4>
+    <p>Asegúrate de que tu email de recuperación esté actualizado. Si olvidas tu contraseña, recibirás un código de verificación en este email.</p>
+  </div>
+</div>

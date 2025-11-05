@@ -1,4 +1,8 @@
 <div class="dashboard">
+  <button class="theme-toggle" (click)="themeService.toggleTheme()">
+    {{ themeService.isDarkMode() ? '☀️' : '🌙' }}
+  </button>
+
   <header class="dashboard-header">
     <div class="header-content">
       <h1>Mi Panel de Cliente</h1>
@@ -40,7 +44,7 @@
             (click)="seleccionarServicio(servicio)"
           >
             <div class="servicio-nombre">{{ servicio.nombre }}</div>
-            <div class="servicio-duracion">{{ servicio.duracion_minutos }} min</div>
+            <div class="servicio-duracion">{{ servicio.duracion }} min</div>
             <div class="servicio-precio" *ngIf="servicio.precio">${{ servicio.precio }}</div>
           </button>
         </div>

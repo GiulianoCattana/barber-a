@@ -1,6 +1,21 @@
 /* Importar fuente Montserrat de Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
+/* Variables CSS para temas - Wonder Barbershop */
+:root {
+  --bg-primary: #f5f7fa;
+  --text-primary: #333;
+  --accent-primary: #667eea;
+  --accent-secondary: #764ba2;
+}
+
+body.dark-theme {
+  --bg-primary: #1a1a1a;
+  --text-primary: #ffffff;
+  --accent-primary: #ff6b35;
+  --accent-secondary: #ff8c42;
+}
+
 /* Reset y estilos globales */
 * {
   margin: 0;
@@ -10,9 +25,10 @@
 
 body {
   font-family: 'Montserrat', sans-serif;
-  background-color: #f5f7fa;
-  color: #333;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Scrollbar personalizado */
@@ -31,4 +47,59 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #5568d3;
+}
+
+/* TEMA OSCURO - Wonder Barbershop (Negro y Naranja) */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+  color: #ffffff !important;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.dark-theme ::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background: #ff6b35;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #ff8c42;
+}
+
+/* Botón de toggle tema - Wonder Barbershop Style */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  font-size: 24px;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+body.dark-theme .theme-toggle {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.6);
+  border: 2px solid #000;
+}
+
+body.dark-theme .theme-toggle:hover {
+  box-shadow: 0 6px 25px rgba(255, 140, 66, 0.8);
+  transform: scale(1.1) rotate(-15deg);
 }

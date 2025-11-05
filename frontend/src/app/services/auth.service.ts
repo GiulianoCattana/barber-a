@@ -81,4 +81,36 @@ export class AuthService {
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
+
+  getUsuario(): Usuario | null {
+    const usuario = localStorage.getItem('usuario');
+    if (usuario) {
+      return JSON.parse(usuario);
+    }
+    return this.currentUserValue;
+  }
+
+  actualizarEmail(nuevoEmail: string): Observable<any> {
+    const token = this.getToken();
+    return this.http.put(`${this.apiUrl}/actualizar-email`,
+      { email: nuevoEmail },
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+  }
+
+  cambiarPassword(passwordActual: string, passwordNueva: string): Observable<any> {
+    const token = this.getToken();
+    return this.http.put(`${this.apiUrl}/cambiar-password`,
+      { passwordActual, passwordNueva },
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+  }
+
+  verificarEmail(email: string, codigo: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verificar-email`, { email, codigo });
+  }
+
+  reenviarCodigoVerificacion(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reenviar-codigo-verificacion`, { email });
+  }
 }

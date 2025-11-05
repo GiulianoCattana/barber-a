@@ -1,0 +1,67 @@
+<div class="verificar-container">
+  <div class="verificar-card">
+    <div class="header">
+      <div class="icon">📧</div>
+      <h2>Verifica tu Email</h2>
+      <p class="subtitle">Hemos enviado un código de verificación a</p>
+      <p class="email-display">{{ email }}</p>
+    </div>
+
+    <div class="content">
+      <p class="info-text">
+        Ingresa el código de 6 dígitos que recibiste en tu correo electrónico
+      </p>
+
+      <div class="form-group">
+        <label for="codigo">Código de Verificación</label>
+        <input
+          type="text"
+          id="codigo"
+          [(ngModel)]="codigo"
+          (keyup.enter)="verificarCodigo()"
+          placeholder="000000"
+          maxlength="6"
+          class="codigo-input"
+          [disabled]="cargando"
+          autocomplete="off">
+        <small class="help-text">Revisa tu bandeja de entrada y spam</small>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <div *ngIf="mensaje" class="success-message">
+        {{ mensaje }}
+      </div>
+
+      <button
+        (click)="verificarCodigo()"
+        class="btn-primary"
+        [disabled]="cargando || codigo.length !== 6">
+        {{ cargando ? 'Verificando...' : 'Verificar Código' }}
+      </button>
+
+      <div class="divider">
+        <span>¿No recibiste el código?</span>
+      </div>
+
+      <button
+        (click)="reenviarCodigo()"
+        class="btn-secondary"
+        [disabled]="cargando || codigoEnviado">
+        {{ codigoEnviado ? 'Código Enviado ✓' : 'Reenviar Código' }}
+      </button>
+
+      <button
+        (click)="volverLogin()"
+        class="btn-link">
+        Volver al Login
+      </button>
+    </div>
+
+    <div class="footer">
+      <p>⏰ El código expira en 15 minutos</p>
+    </div>
+  </div>
+</div>

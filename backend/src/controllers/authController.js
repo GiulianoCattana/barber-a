@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
+const { enviarEmailVerificacion } = require('../services/emailService');
 
 const registro = async (req, res) => {
   const { nombre, email, password, telefono } = req.body;
@@ -20,31 +21,36 @@ const registro = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear el usuario
+    // Crear el usuario con email_verificado en false
     const nuevoUsuario = await pool.query(
-      'INSERT INTO usuarios (nombre, email, password, telefono, rol) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre, email, telefono, rol',
-      [nombre, email, passwordHash, telefono, 'cliente']
+      'INSERT INTO usuarios (nombre, email, password, telefono, rol, email_verificado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nombre, email, telefono, rol',
+      [nombre, email, passwordHash, telefono, 'cliente', false]
     );
 
     const usuario = nuevoUsuario.rows[0];
 
-    // Generar token
-    const token = jwt.sign(
-      { id: usuario.id, email: usuario.email, rol: usuario.rol },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // Enviar código de verificación por email
+    try {
+      await enviarEmailVerificacion(email, nombre);
+    } catch (emailError) {
+      console.error('Error al enviar email de verificación:', emailError);
+      // Eliminar el usuario si no se pudo enviar el email
+      await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
+      return res.status(500).json({
+        mensaje: 'No se pudo enviar el email de verificación. Por favor verifica tu dirección de email.'
+      });
+    }
 
     res.status(201).json({
-      mensaje: 'Usuario registrado exitosamente',
-      token,
+      mensaje: 'Usuario registrado. Por favor verifica tu email para activar tu cuenta.',
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
         telefono: usuario.telefono,
         rol: usuario.rol
-      }
+      },
+      requiresVerification: true
     });
   } catch (error) {
     console.error(error);
@@ -75,6 +81,15 @@ const login = async (req, res) => {
       return res.status(401).json({ mensaje: 'Credenciales inválidas' });
     }
 
+    // Verificar si el email está verificado
+    if (!usuario.email_verificado) {
+      return res.status(403).json({
+        mensaje: 'Por favor verifica tu email antes de iniciar sesión',
+        requiresVerification: true,
+        email: usuario.email
+      });
+    }
+
     // Generar token
     const token = jwt.sign(
       { id: usuario.id, email: usuario.email, rol: usuario.rol },
@@ -99,4 +114,177 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { registro, login };
+const actualizarEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const usuarioId = req.usuario.id;
+
+    // Verificar que el nuevo email no esté en uso por otro usuario
+    const emailExistente = await pool.query(
+      'SELECT id FROM usuarios WHERE email = $1 AND id != $2',
+      [email, usuarioId]
+    );
+
+    if (emailExistente.rows.length > 0) {
+      return res.status(400).json({ mensaje: 'Este email ya está en uso' });
+    }
+
+    // Actualizar email
+    await pool.query(
+      'UPDATE usuarios SET email = $1 WHERE id = $2',
+      [email, usuarioId]
+    );
+
+    res.json({ mensaje: 'Email actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar email:', error);
+    res.status(500).json({ mensaje: 'Error al actualizar email' });
+  }
+};
+
+const cambiarPassword = async (req, res) => {
+  try {
+    const { passwordActual, passwordNueva } = req.body;
+    const usuarioId = req.usuario.id;
+
+    // Obtener el usuario
+    const resultado = await pool.query(
+      'SELECT password FROM usuarios WHERE id = $1',
+      [usuarioId]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    const usuario = resultado.rows[0];
+
+    // Verificar contraseña actual
+    const passwordValida = await bcrypt.compare(passwordActual, usuario.password);
+
+    if (!passwordValida) {
+      return res.status(400).json({ mensaje: 'Contraseña actual incorrecta' });
+    }
+
+    // Hashear nueva contraseña
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(passwordNueva, salt);
+
+    // Actualizar contraseña
+    await pool.query(
+      'UPDATE usuarios SET password = $1 WHERE id = $2',
+      [passwordHash, usuarioId]
+    );
+
+    res.json({ mensaje: 'Contraseña actualizada exitosamente' });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ mensaje: 'Error al cambiar contraseña' });
+  }
+};
+
+// Verificar código de email para activar cuenta
+const verificarEmailCodigo = async (req, res) => {
+  const { email, codigo } = req.body;
+
+  try {
+    // Buscar el usuario
+    const resultado = await pool.query(
+      'SELECT * FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    const usuario = resultado.rows[0];
+
+    // Verificar si ya está verificado
+    if (usuario.email_verificado) {
+      return res.status(400).json({ mensaje: 'El email ya está verificado' });
+    }
+
+    // Verificar el código
+    if (!usuario.codigo_verificacion || usuario.codigo_verificacion !== codigo) {
+      return res.status(400).json({ mensaje: 'Código incorrecto' });
+    }
+
+    // Verificar expiración
+    const ahora = new Date();
+    const expiracion = new Date(usuario.codigo_expiracion);
+
+    if (ahora > expiracion) {
+      return res.status(400).json({ mensaje: 'El código ha expirado. Solicita uno nuevo.' });
+    }
+
+    // Marcar el email como verificado y limpiar código
+    await pool.query(
+      'UPDATE usuarios SET email_verificado = true, codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id = $1',
+      [usuario.id]
+    );
+
+    // Generar token para login automático
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      mensaje: '¡Email verificado exitosamente! Ya puedes usar tu cuenta.',
+      token,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        telefono: usuario.telefono,
+        rol: usuario.rol
+      }
+    });
+  } catch (error) {
+    console.error('Error al verificar código:', error);
+    res.status(500).json({ mensaje: 'Error al verificar código' });
+  }
+};
+
+// Reenviar código de verificación
+const reenviarCodigoVerificacion = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Buscar el usuario
+    const resultado = await pool.query(
+      'SELECT * FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    }
+
+    const usuario = resultado.rows[0];
+
+    // Verificar si ya está verificado
+    if (usuario.email_verificado) {
+      return res.status(400).json({ mensaje: 'El email ya está verificado' });
+    }
+
+    // Enviar nuevo código
+    await enviarEmailVerificacion(email, usuario.nombre);
+
+    res.json({ mensaje: 'Código enviado nuevamente a tu email' });
+  } catch (error) {
+    console.error('Error al reenviar código:', error);
+    res.status(500).json({ mensaje: 'Error al reenviar código' });
+  }
+};
+
+module.exports = {
+  registro,
+  login,
+  actualizarEmail,
+  cambiarPassword,
+  verificarEmailCodigo,
+  reenviarCodigoVerificacion
+};

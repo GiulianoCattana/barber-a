@@ -43,7 +43,10 @@ export class RegistroComponent implements OnInit {
     this.authService.registro(this.nombre, this.email, this.password, this.telefono).subscribe({
       next: (response) => {
         this.loading = false;
-        this.router.navigate(['/dashboard-cliente']);
+        // Redirigir a la pantalla de verificación de email
+        this.router.navigate(['/verificar-email'], {
+          queryParams: { email: this.email }
+        });
       },
       error: (error) => {
         this.loading = false;

@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TurnosService, Turno, Horario } from '../../services/turnos.service';
 import { ServiciosService, Servicio } from '../../services/servicios.service';
+import { ThemeService } from '../../services/theme.service';
 
 interface DiaDisponible {
   nombre: string;
@@ -17,7 +18,8 @@ interface DiaDisponible {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './dashboard-cliente.component.html',
-  styleUrl: './dashboard-cliente.component.css'
+  styleUrl: './dashboard-cliente.component.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class DashboardClienteComponent implements OnInit {
   usuario: any;
@@ -49,7 +51,8 @@ export class DashboardClienteComponent implements OnInit {
     private authService: AuthService,
     private turnosService: TurnosService,
     private serviciosService: ServiciosService,
-    private router: Router
+    private router: Router,
+    public themeService: ThemeService
   ) {
     this.usuario = this.authService.currentUserValue;
   }
@@ -103,7 +106,7 @@ export class DashboardClienteComponent implements OnInit {
   }
 
   getDuracionTotal(): number {
-    return this.serviciosSeleccionados.reduce((total, s) => total + s.duracion_minutos, 0);
+    return this.serviciosSeleccionados.reduce((total, s) => total + s.duracion, 0);
   }
 
   getPrecioTotal(): number {
