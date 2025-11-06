@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TurnosService, Turno } from '../../services/turnos.service';
 import { BloqueadosService, HorarioBloqueado } from '../../services/bloqueados.service';
+import { DiasBloqueadosService, DiaBloqueado } from '../../services/dias-bloqueados.service';
 import { ServiciosManagerComponent } from '../../admin/servicios-manager/servicios-manager.component';
 import { PerfilAdminComponent } from '../../admin/perfil-admin/perfil-admin.component';
 import { ThemeService } from '../../services/theme.service';
@@ -60,10 +61,17 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     cancelados: 0
   };
 
+  turnosProximos: Turno[] = [];
+  mostrarNotificaciones: boolean = true;
+
+  diasBloqueados: DiaBloqueado[] = [];
+  diasBloqueadosSet: Set<string> = new Set();
+
   constructor(
     private authService: AuthService,
     private turnosService: TurnosService,
     private bloqueadosService: BloqueadosService,
+    private diasBloqueadosService: DiasBloqueadosService,
     private router: Router,
     public themeService: ThemeService
   ) {
@@ -74,6 +82,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     this.generarDiasSemana();
     this.cargarTurnos();
     this.configurarBusquedaTiempoReal();
+    this.cargarDiasBloqueados();
   }
 
   ngOnDestroy(): void {
@@ -159,6 +168,30 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     this.fechaSeleccionada = dia.fecha;
     this.cargarHorariosBloqueados();
     this.filtrarTurnosPorDia();
+
+    // Hacer scroll automático hacia los turnos
+    // En móviles/tablets es más necesario, pero también funciona bien en escritorio
+    setTimeout(() => {
+      const turnosSection = document.querySelector('.turnos-dia-container') as HTMLElement;
+      if (turnosSection) {
+        const isMobile = window.innerWidth <= 992;
+
+        // En móviles/tablets, scroll más agresivo hacia el inicio
+        // En escritorio, scroll más suave
+        turnosSection.scrollIntoView({
+          behavior: 'smooth',
+          block: isMobile ? 'start' : 'nearest'
+        });
+
+        // Agregar efecto de highlight en móviles para que sea más visible
+        if (isMobile) {
+          turnosSection.classList.add('highlight');
+          setTimeout(() => {
+            turnosSection.classList.remove('highlight');
+          }, 1000);
+        }
+      }
+    }, 100);
   }
 
   filtrarTurnosPorDia(): void {
@@ -168,9 +201,30 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const hoy = new Date();
+    const fechaHoy = hoy.getFullYear() + '-' +
+                     String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
+                     String(hoy.getDate()).padStart(2, '0');
+    const esHoy = this.fechaSeleccionada === fechaHoy;
+    const horaActual = hoy.getHours() * 60 + hoy.getMinutes(); // Convertir a minutos
+
     this.turnosDia = this.turnos.filter(turno => {
       const fechaTurno = turno.fecha.toString().split('T')[0];
-      return fechaTurno === this.fechaSeleccionada;
+
+      if (fechaTurno !== this.fechaSeleccionada) {
+        return false;
+      }
+
+      // Si es hoy, filtrar turnos que ya pasaron
+      if (esHoy) {
+        const [hora, minuto] = turno.hora.toString().split(':').map(Number);
+        const minutosTurno = hora * 60 + minuto;
+
+        // Solo mostrar turnos futuros o que están a punto de comenzar
+        return minutosTurno >= horaActual;
+      }
+
+      return true;
     }).sort((a, b) => {
       // Ordenar por hora
       const horaA = a.hora.toString();
@@ -201,12 +255,34 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
         this.aplicarFiltro();
         this.calcularEstadisticas();
         this.filtrarTurnosPorDia();
+        this.verificarTurnosProximos();
       },
       error: (error) => {
         this.error = 'Error al cargar turnos';
         console.error('Error al cargar turnos:', error);
       }
     });
+  }
+
+  verificarTurnosProximos(): void {
+    const hoy = new Date();
+    const manana = new Date(hoy);
+    manana.setDate(hoy.getDate() + 1);
+
+    const mananaStr = manana.getFullYear() + '-' +
+                      String(manana.getMonth() + 1).padStart(2, '0') + '-' +
+                      String(manana.getDate()).padStart(2, '0');
+
+    this.turnosProximos = this.turnos.filter(turno => {
+      const fechaTurno = turno.fecha.toString().split('T')[0];
+      return fechaTurno === mananaStr && turno.estado !== 'cancelado';
+    }).sort((a, b) => {
+      return a.hora.toString().localeCompare(b.hora.toString());
+    });
+  }
+
+  cerrarNotificaciones(): void {
+    this.mostrarNotificaciones = false;
   }
 
   aplicarFiltro(): void {
@@ -282,6 +358,10 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     this.vistaActual = vista;
   }
 
+  volverAlHome(): void {
+    this.router.navigate(['/home']);
+  }
+
   cerrarSesion(): void {
     this.authService.logout();
     this.router.navigate(['/']);
@@ -324,13 +404,13 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   bloquearHorario(hora: string): void {
     if (!this.fechaSeleccionada) return;
 
-    const motivo = prompt('Motivo del bloqueo (opcional):');
-    if (motivo === null) return; // Usuario canceló
+    // Usar motivo genérico sin preguntar al usuario
+    const motivo = 'No disponible';
 
     this.bloqueadosService.bloquearHorario(
       this.fechaSeleccionada,
       hora,
-      motivo || 'No disponible'
+      motivo
     ).subscribe({
       next: () => {
         this.mensaje = `Horario ${hora} bloqueado exitosamente`;
@@ -366,11 +446,27 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   }
 
   obtenerHorariosTrabajo(): string[] {
+    const hoy = new Date();
+    const fechaHoy = hoy.getFullYear() + '-' +
+                     String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
+                     String(hoy.getDate()).padStart(2, '0');
+    const esHoy = this.fechaSeleccionada === fechaHoy;
+    const horaActual = hoy.getHours() * 60 + hoy.getMinutes();
+
     const horarios: string[] = [];
     for (let hora = 9; hora <= 22; hora++) {
       for (let minuto = 0; minuto < 60; minuto += 30) {
         const horaStr = `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
-        horarios.push(horaStr);
+
+        // Si es hoy, solo mostrar horarios futuros
+        if (esHoy) {
+          const minutosTurno = hora * 60 + minuto;
+          if (minutosTurno >= horaActual) {
+            horarios.push(horaStr);
+          }
+        } else {
+          horarios.push(horaStr);
+        }
       }
     }
     return horarios;
@@ -386,6 +482,27 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
       const horaTurno = turno.hora.toString().substring(0, 5);
       return horaTurno === hora;
     });
+  }
+
+  obtenerEstadoTurnoEnHorario(hora: string): string {
+    const turno = this.turnosDia.find(turno => {
+      if (turno.estado === 'cancelado') {
+        return false;
+      }
+      const horaTurno = turno.hora.toString().substring(0, 5);
+      return horaTurno === hora;
+    });
+    return turno ? turno.estado || 'pendiente' : '';
+  }
+
+  obtenerTextoEstadoTurno(hora: string): string {
+    const estado = this.obtenerEstadoTurnoEnHorario(hora);
+    switch(estado) {
+      case 'pendiente': return 'Turno Pendiente';
+      case 'confirmado': return 'Turno Confirmado';
+      case 'completado': return 'Turno Completado';
+      default: return 'Turno Reservado';
+    }
   }
 
   // Funciones para búsqueda de clientes
@@ -441,6 +558,15 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     }, 200);
   }
 
+  limpiarBusqueda(): void {
+    this.busquedaCliente = '';
+    this.clienteBuscado = null;
+    this.historialCliente = [];
+    this.busquedaRealizada = false;
+    this.clientesSugeridos = [];
+    this.mostrarSugerencias = false;
+  }
+
   historialFiltrado(): Turno[] {
     if (this.filtroHistorial === 'todos') {
       return this.historialCliente;
@@ -450,6 +576,140 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
 
   contarPorEstado(estado: string): number {
     return this.historialCliente.filter(t => t.estado === estado).length;
+  }
+
+  contarTurnosPorDia(fecha: string): number {
+    const hoy = new Date();
+    const fechaHoy = hoy.getFullYear() + '-' +
+                     String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
+                     String(hoy.getDate()).padStart(2, '0');
+    const esHoy = fecha === fechaHoy;
+    const horaActual = hoy.getHours() * 60 + hoy.getMinutes();
+
+    return this.turnos.filter(turno => {
+      const fechaTurno = turno.fecha.toString().split('T')[0];
+
+      if (fechaTurno !== fecha || turno.estado === 'cancelado') {
+        return false;
+      }
+
+      // Si es hoy, solo contar turnos futuros
+      if (esHoy) {
+        const [hora, minuto] = turno.hora.toString().split(':').map(Number);
+        const minutosTurno = hora * 60 + minuto;
+        return minutosTurno >= horaActual;
+      }
+
+      return true;
+    }).length;
+  }
+
+  // Funciones para gestión de días bloqueados
+  cargarDiasBloqueados(): void {
+    this.diasBloqueadosService.obtenerDiasBloqueados().subscribe({
+      next: (data) => {
+        this.diasBloqueados = data;
+        this.diasBloqueadosSet = new Set(data.map(d => d.fecha));
+      },
+      error: (err) => {
+        console.error('Error al cargar días bloqueados:', err);
+      }
+    });
+  }
+
+  estaDiaBloqueado(fecha: string): boolean {
+    return this.diasBloqueadosSet.has(fecha);
+  }
+
+  bloquearDiaCompleto(): void {
+    if (!this.fechaSeleccionada) return;
+
+    if (this.estaDiaBloqueado(this.fechaSeleccionada)) {
+      this.error = 'Este día ya está bloqueado';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    if (!confirm(`¿Bloquear el día ${this.diaSeleccionado}? Los clientes no podrán reservar turnos.`)) {
+      return;
+    }
+
+    // Usar un motivo genérico sin preguntar al usuario
+    const motivo = 'Día no disponible';
+
+    this.diasBloqueadosService.bloquearDia(this.fechaSeleccionada, motivo).subscribe({
+      next: (response) => {
+        // Agregar inmediatamente el día al Set local para actualización instantánea
+        this.diasBloqueadosSet.add(this.fechaSeleccionada);
+
+        this.mensaje = `Día ${this.diaSeleccionado} bloqueado exitosamente.`;
+
+        // Recargar lista completa de días bloqueados
+        this.diasBloqueadosService.obtenerDiasBloqueados().subscribe({
+          next: (data) => {
+            this.diasBloqueados = data;
+            this.diasBloqueadosSet = new Set(data.map(d => d.fecha));
+            console.log('Días bloqueados actualizados:', Array.from(this.diasBloqueadosSet));
+
+            setTimeout(() => {
+              this.mensaje = '';
+            }, 2000);
+          },
+          error: (err) => {
+            console.error('Error al recargar días bloqueados:', err);
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error al bloquear:', err);
+        this.error = err.error?.mensaje || 'Error al bloquear día';
+        setTimeout(() => this.error = '', 3000);
+      }
+    });
+  }
+
+  desbloquearDiaCompleto(): void {
+    if (!this.fechaSeleccionada) return;
+
+    if (!this.estaDiaBloqueado(this.fechaSeleccionada)) {
+      this.error = 'Este día no está bloqueado';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    if (!confirm(`¿Desbloquear el día ${this.diaSeleccionado}? Los clientes podrán volver a reservar turnos.`)) {
+      return;
+    }
+
+    this.diasBloqueadosService.desbloquearDia(this.fechaSeleccionada).subscribe({
+      next: () => {
+        // Eliminar inmediatamente el día del Set local para actualización instantánea
+        this.diasBloqueadosSet.delete(this.fechaSeleccionada);
+
+        this.mensaje = `Día ${this.diaSeleccionado} desbloqueado exitosamente`;
+
+        // Recargar lista completa de días bloqueados
+        this.diasBloqueadosService.obtenerDiasBloqueados().subscribe({
+          next: (data) => {
+            this.diasBloqueados = data;
+            this.diasBloqueadosSet = new Set(data.map(d => d.fecha));
+            console.log('Días bloqueados actualizados:', Array.from(this.diasBloqueadosSet));
+
+            setTimeout(() => {
+              this.mensaje = '';
+            }, 2000);
+          },
+          error: (err) => {
+            console.error('Error al recargar días bloqueados:', err);
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error al desbloquear:', err);
+        this.error = err.error?.mensaje || 'Error al desbloquear día';
+        setTimeout(() => this.error = '', 3000);
+      }
+    });
   }
 }
  

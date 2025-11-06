@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GaleriaService, ItemGaleria } from '../../services/galeria.service';
+import { SliderService, SliderImagen } from '../../services/slider.service';
+import { HomeServiciosService, HomeServicio } from '../../services/home-servicios.service';
 
 @Component({
   selector: 'app-home',
@@ -16,41 +18,66 @@ export class HomeComponent implements OnInit {
   backendUrl = 'http://localhost:3000';
   logoExists: boolean = true;
 
-  servicios = [
-    {
-      nombre: 'Corte de Cabello',
-      descripcion: 'Cortes modernos y clásicos adaptados a tu estilo',
-      icono: '✂️'
-    },
-    {
-      nombre: 'Tinte',
-      descripcion: 'Coloración profesional con productos de primera calidad',
-      icono: '🎨'
-    },
-    {
-      nombre: 'Peinado',
-      descripcion: 'Peinados para eventos especiales y día a día',
-      icono: '💇'
-    },
-    {
-      nombre: 'Barba',
-      descripcion: 'Cuidado y diseño de barba profesional',
-      icono: '🧔'
-    },
-    {
-      nombre: 'Tratamiento Capilar',
-      descripcion: 'Tratamientos especializados para el cuidado de tu cabello',
-      icono: '✨'
-    }
-  ];
+  // Slider
+  currentSlide = 0;
+  slides: SliderImagen[] = [];
+
+  servicios: HomeServicio[] = [];
 
   constructor(
     private galeriaService: GaleriaService,
+    private sliderService: SliderService,
+    private homeServiciosService: HomeServiciosService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarGaleria();
+    this.cargarSlider();
+    this.cargarServicios();
+  }
+
+  iniciarSlider(): void {
+    setInterval(() => {
+      this.nextSlide();
+    }, 12000); // Cambiar cada 12 segundos
+  }
+
+  nextSlide(): void {
+    this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+  }
+
+  prevSlide(): void {
+    this.currentSlide = this.currentSlide === 0 ? this.slides.length - 1 : this.currentSlide - 1;
+  }
+
+  goToSlide(index: number): void {
+    this.currentSlide = index;
+  }
+
+  cargarSlider(): void {
+    this.sliderService.obtenerImagenes().subscribe({
+      next: (data) => {
+        this.slides = data.filter(img => img.activo !== false);
+        if (this.slides.length > 0) {
+          this.iniciarSlider();
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar slider:', error);
+      }
+    });
+  }
+
+  cargarServicios(): void {
+    this.homeServiciosService.obtenerServicios().subscribe({
+      next: (data) => {
+        this.servicios = data.filter(s => s.activo !== false);
+      },
+      error: (error) => {
+        console.error('Error al cargar servicios:', error);
+      }
+    });
   }
 
   cargarGaleria(): void {

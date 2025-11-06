@@ -5,7 +5,10 @@
 
   <header class="dashboard-header">
     <div class="header-content">
-      <h1>Panel de Administrador</h1>
+      <div class="header-left">
+        <button (click)="volverAlHome()" class="btn-home">← Volver al Home</button>
+        <h1>Panel de Administrador</h1>
+      </div>
       <div class="user-info">
         <span>Admin: {{ usuario?.nombre }}</span>
         <button (click)="irGaleria()" class="btn-galeria">Galería</button>
@@ -17,6 +20,33 @@
   <main class="dashboard-content">
     <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
     <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <!-- Notificación de Turnos Próximos -->
+    <div *ngIf="turnosProximos.length > 0 && mostrarNotificaciones" class="notificacion-turnos-proximos">
+      <div class="notificacion-header">
+        <div class="notificacion-titulo">
+          <span class="icono-alerta">🔔</span>
+          <h3>¡Turnos para mañana!</h3>
+          <span class="badge-count">{{ turnosProximos.length }}</span>
+        </div>
+        <button class="btn-cerrar-notificacion" (click)="cerrarNotificaciones()">✕</button>
+      </div>
+      <div class="notificacion-body">
+        <p class="notificacion-mensaje">Tienes {{ turnosProximos.length }} turno(s) programado(s) para mañana:</p>
+        <div class="turnos-proximos-lista">
+          <div *ngFor="let turno of turnosProximos" class="turno-proximo-item">
+            <div class="turno-proximo-hora">{{ turno.hora }}</div>
+            <div class="turno-proximo-info">
+              <strong>{{ turno.cliente_nombre }}</strong>
+              <span>{{ turno.servicio }}</span>
+            </div>
+            <span class="estado-badge-small" [class]="getEstadoClass(turno.estado)">
+              {{ turno.estado }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Navegación de Vistas -->
     <div class="vista-navegacion">
@@ -47,7 +77,30 @@
     </div>
 
     <!-- Vista de Turnos -->
-    <div *ngIf="vistaActual === 'turnos'">
+    <div *ngIf="vistaActual === 'turnos'" class="turnos-layout">
+      <!-- Menú Lateral -->
+      <aside class="menu-lateral">
+        <div class="menu-header">
+          <h3>📅 TURNOS</h3>
+        </div>
+        <nav class="menu-dias">
+          <button
+            *ngFor="let dia of diasDisponibles"
+            class="menu-dia-item"
+            [class.activo]="diaSeleccionado === dia.nombre"
+            (click)="seleccionarDia(dia)"
+          >
+            <div class="dia-nombre">{{ dia.nombre }}</div>
+            <div class="dia-fecha-small">{{ dia.fecha | date:'dd/MM' }}</div>
+            <div class="dia-contador" *ngIf="contarTurnosPorDia(dia.fecha) > 0">
+              {{ contarTurnosPorDia(dia.fecha) }}
+            </div>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Contenido Principal -->
+      <div class="contenido-principal">
     <section class="estadisticas">
       <h2>Estadísticas</h2>
       <div class="stats-grid">
@@ -71,28 +124,34 @@
     </section>
 
     <section class="gestion-turnos">
-      <h2>Gestión de Turnos</h2>
-
-      <!-- Selector de Días -->
-      <div class="dias-semana">
-        <button
-          *ngFor="let dia of diasDisponibles"
-          class="dia-btn"
-          [class.activo]="diaSeleccionado === dia.nombre"
-          (click)="seleccionarDia(dia)"
-        >
-          {{ dia.nombre }}
-          <span class="dia-fecha">{{ dia.fecha | date:'dd/MM' }}</span>
-        </button>
-      </div>
-
       <!-- Turnos del Día Seleccionado -->
       <div class="turnos-dia-container">
         <div class="header-turnos-dia">
-          <h3 class="titulo-dia">
-            Turnos para {{ diaSeleccionado }} - {{ fechaSeleccionada | date:'dd/MM/yyyy' }}
-            <span class="contador-turnos">({{ turnosDia.length }} turnos)</span>
-          </h3>
+          <div class="titulo-y-bloqueo">
+            <h2 class="titulo-dia-principal">
+              {{ diaSeleccionado }} - {{ fechaSeleccionada | date:'dd/MM/yyyy' }}
+              <span class="contador-turnos">({{ turnosDia.length }} turnos)</span>
+              <span *ngIf="estaDiaBloqueado(fechaSeleccionada)" class="badge-dia-bloqueado">
+                🔒 DÍA BLOQUEADO
+              </span>
+            </h2>
+            <div class="controles-dia">
+              <button
+                *ngIf="!estaDiaBloqueado(fechaSeleccionada)"
+                (click)="bloquearDiaCompleto()"
+                class="btn-bloquear-dia"
+                title="Bloquear todo el día">
+                🔒 Bloquear Día Completo
+              </button>
+              <button
+                *ngIf="estaDiaBloqueado(fechaSeleccionada)"
+                (click)="desbloquearDiaCompleto()"
+                class="btn-desbloquear-dia"
+                title="Desbloquear día">
+                🔓 Desbloquear Día
+              </button>
+            </div>
+          </div>
 
           <!-- Filtros de Estado -->
           <div class="filtros-estado" *ngIf="turnosDia.length > 0">
@@ -197,12 +256,22 @@
           *ngFor="let hora of obtenerHorariosTrabajo()"
           class="horario-slot"
           [class.bloqueado]="estaHorarioBloqueado(hora)"
-          [class.ocupado]="tieneTurnoEnHorario(hora)">
+          [class.ocupado]="tieneTurnoEnHorario(hora)"
+          [class.pendiente]="obtenerEstadoTurnoEnHorario(hora) === 'pendiente'"
+          [class.confirmado]="obtenerEstadoTurnoEnHorario(hora) === 'confirmado'"
+          [class.completado]="obtenerEstadoTurnoEnHorario(hora) === 'completado'">
 
           <div class="horario-hora">{{ hora }}</div>
 
           <div class="horario-estado" *ngIf="tieneTurnoEnHorario(hora)">
-            <span class="badge ocupado">Turno Reservado</span>
+            <span
+              class="badge"
+              [class.pendiente]="obtenerEstadoTurnoEnHorario(hora) === 'pendiente'"
+              [class.confirmado]="obtenerEstadoTurnoEnHorario(hora) === 'confirmado'"
+              [class.completado]="obtenerEstadoTurnoEnHorario(hora) === 'completado'"
+              [class.ocupado]="!obtenerEstadoTurnoEnHorario(hora)">
+              {{ obtenerTextoEstadoTurno(hora) }}
+            </span>
           </div>
 
           <div class="horario-estado" *ngIf="estaHorarioBloqueado(hora) && !tieneTurnoEnHorario(hora)">
@@ -225,7 +294,8 @@
         </div>
       </div>
     </section>
-    </div>
+      </div><!-- Fin contenido-principal -->
+    </div><!-- Fin turnos-layout -->
 
     <!-- Vista de Historial de Clientes -->
     <div *ngIf="vistaActual === 'clientes'" class="vista-clientes">
@@ -250,6 +320,9 @@
             <button (click)="buscarCliente()" class="btn-buscar" [disabled]="buscando">
               <span *ngIf="!buscando">Buscar</span>
               <span *ngIf="buscando">...</span>
+            </button>
+            <button (click)="limpiarBusqueda()" class="btn-refresh" title="Limpiar búsqueda">
+              🔄
             </button>
           </div>
 

@@ -99,6 +99,19 @@ const obtenerTurnosDisponibles = async (req, res) => {
   try {
     console.log('Buscando turnos para fecha:', fecha, 'servicio_id:', servicio_id, 'duracion_total:', duracion_total);
 
+    // Verificar si el día está bloqueado
+    const diaBloqueado = await pool.query(
+      'SELECT * FROM dias_bloqueados WHERE fecha = $1',
+      [fecha]
+    );
+
+    if (diaBloqueado.rows.length > 0) {
+      return res.json({
+        turnos: [],
+        mensaje: `Este día no está disponible para reservas. Motivo: ${diaBloqueado.rows[0].motivo || 'Día bloqueado'}`
+      });
+    }
+
     // Obtener información del servicio o usar duración total
     let duracionRequerida = 30; // Por defecto 30 minutos
 
@@ -242,6 +255,19 @@ const crearTurno = async (req, res) => {
     }
 
     console.log('Creando turno:', { fecha, hora, servicio: nombreServicio, duracion: duracionMinutos });
+
+    // Verificar si el día está bloqueado
+    const diaBloqueado = await client.query(
+      'SELECT * FROM dias_bloqueados WHERE fecha = $1',
+      [fecha]
+    );
+
+    if (diaBloqueado.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        mensaje: `Este día no está disponible para reservas. Motivo: ${diaBloqueado.rows[0].motivo || 'Día bloqueado'}`
+      });
+    }
 
     // Validar la fecha del turno
     const [year, month, day] = fecha.split('-').map(Number);
@@ -498,9 +524,8 @@ const obtenerHistorialCliente = async (req, res) => {
 
     // Obtener todos los turnos del cliente
     const turnos = await pool.query(`
-      SELECT t.*, s.nombre as servicio_nombre, s.duracion_minutos
+      SELECT t.*
       FROM turnos t
-      LEFT JOIN servicios s ON t.servicio_id = s.id
       WHERE t.cliente_id = $1
       ORDER BY t.fecha DESC, t.hora DESC
     `, [clienteId]);

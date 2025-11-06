@@ -2,9 +2,6 @@
   <!-- Header / Navbar -->
   <header class="header">
     <div class="header-content">
-      <div class="logo-container">
-        <img src="assets/images/wonder-logo.jpg" alt="Wonder Barbershop" class="logo-img" *ngIf="logoExists" (error)="onLogoError()">
-      </div>
       <nav class="nav-buttons">
         <button (click)="irALogin()" class="btn-login">Iniciar Sesión</button>
         <button (click)="irARegistro()" class="btn-register">Registrarse</button>
@@ -12,15 +9,37 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Hero Section con Slider -->
   <section class="hero">
+    <!-- Slider de fondo -->
+    <div class="hero-slider">
+      <div class="slider-track" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
+        <div *ngFor="let slide of slides" class="slide">
+          <img [src]="slide.imagen_url.startsWith('http') || slide.imagen_url.startsWith('assets') ? slide.imagen_url : backendUrl + slide.imagen_url" [alt]="slide.alt_text">
+          <div class="slide-overlay"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido sobre el slider -->
     <div class="hero-content">
-      <h2>Bienvenido a Wonder Barbershop</h2>
-      <p>Tu barbería de confianza. Reserva tu turno online y disfruta de nuestros servicios profesionales</p>
+      <h1 class="hero-title">Bienvenido a<br><span class="brand">Wonder Barbershop</span></h1>
+      <p class="hero-subtitle">Tu barbería de confianza. Reserva tu turno online y disfruta de nuestros servicios profesionales</p>
       <div class="hero-buttons">
         <button (click)="irARegistro()" class="btn-hero-primary">Reservar Turno</button>
         <button (click)="irALogin()" class="btn-hero-secondary">Ya tengo cuenta</button>
       </div>
+    </div>
+
+    <!-- Indicadores -->
+    <div class="slider-indicators">
+      <button
+        *ngFor="let slide of slides; let i = index"
+        class="indicator"
+        [class.active]="i === currentSlide"
+        (click)="goToSlide(i)"
+        [attr.aria-label]="'Ir a slide ' + (i + 1)">
+      </button>
     </div>
   </section>
 

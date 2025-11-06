@@ -14,6 +14,28 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+.btn-home {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 20px;
+}
+
+.btn-home:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 h2 {
@@ -178,4 +200,222 @@ body.dark-theme .register-link a:hover,
 body.dark-theme .forgot-password-link a:hover {
   color: #ff6b35;
   text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+}
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+/* Tablets (hasta 768px) */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 15px;
+  }
+
+  .login-card {
+    padding: 30px 25px;
+    max-width: 100%;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    margin-bottom: 25px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  .form-control {
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    padding: 11px;
+    font-size: 15px;
+  }
+
+  .error-message {
+    padding: 9px;
+    font-size: 13px;
+  }
+
+  .forgot-password-link,
+  .register-link {
+    font-size: 13px;
+  }
+}
+
+/* Móviles medianos (hasta 576px) */
+@media (max-width: 576px) {
+  .login-container {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 25px 20px;
+    border-radius: 8px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .form-control {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .btn-primary {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .error-message {
+    padding: 8px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .forgot-password-link {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  .register-link {
+    margin-top: 15px;
+    font-size: 12px;
+  }
+}
+
+/* Móviles pequeños (hasta 400px) */
+@media (max-width: 400px) {
+  .login-container {
+    padding: 8px;
+  }
+
+  .login-card {
+    padding: 20px 15px;
+    border-radius: 6px;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    margin-bottom: 18px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  label {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  .form-control {
+    padding: 9px;
+    font-size: 12px;
+  }
+
+  .btn-primary {
+    padding: 9px;
+    font-size: 13px;
+  }
+
+  .error-message {
+    padding: 7px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .forgot-password-link {
+    margin-top: 10px;
+    font-size: 11px;
+  }
+
+  .register-link {
+    margin-top: 12px;
+    font-size: 11px;
+  }
+
+  body.dark-theme .login-card {
+    border: 2px solid #ff6b35;
+  }
+}
+
+/* Landscape para móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-container {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 20px;
+    max-width: 600px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    margin-bottom: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-control {
+    padding: 8px;
+  }
+
+  .btn-primary {
+    padding: 8px;
+  }
+
+  .error-message {
+    padding: 7px;
+    margin-bottom: 10px;
+  }
+
+  .forgot-password-link {
+    margin-top: 8px;
+  }
+
+  .register-link {
+    margin-top: 10px;
+  }
 }

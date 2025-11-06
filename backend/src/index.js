@@ -9,6 +9,9 @@ const galeriaRoutes = require('./routes/galeriaRoutes');
 const serviciosRoutes = require('./routes/serviciosRoutes');
 const recoveryRoutes = require('./routes/recoveryRoutes');
 const bloqueadosRoutes = require('./routes/bloqueadosRoutes');
+const diasBloqueadosRoutes = require('./routes/diasBloqueados');
+const sliderRoutes = require('./routes/slider');
+const homeServiciosRoutes = require('./routes/homeServicios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +31,9 @@ app.use('/api/galeria', galeriaRoutes);
 app.use('/api/servicios', serviciosRoutes);
 app.use('/api/recovery', recoveryRoutes);
 app.use('/api/bloqueados', bloqueadosRoutes);
+app.use('/api/dias-bloqueados', diasBloqueadosRoutes);
+app.use('/api/slider', sliderRoutes);
+app.use('/api/home-servicios', homeServiciosRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

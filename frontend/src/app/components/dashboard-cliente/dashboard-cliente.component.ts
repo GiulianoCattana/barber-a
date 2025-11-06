@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TurnosService, Turno, Horario } from '../../services/turnos.service';
 import { ServiciosService, Servicio } from '../../services/servicios.service';
+import { DiasBloqueadosService, DiaBloqueado } from '../../services/dias-bloqueados.service';
 import { ThemeService } from '../../services/theme.service';
 
 interface DiaDisponible {
@@ -46,11 +47,14 @@ export class DashboardClienteComponent implements OnInit {
   mensaje: string = '';
   error: string = '';
   horaSeleccionada: string = '';
+  diasBloqueados: DiaBloqueado[] = [];
+  diasBloqueadosSet: Set<string> = new Set();
 
   constructor(
     private authService: AuthService,
     private turnosService: TurnosService,
     private serviciosService: ServiciosService,
+    private diasBloqueadosService: DiasBloqueadosService,
     private router: Router,
     public themeService: ThemeService
   ) {
@@ -60,7 +64,29 @@ export class DashboardClienteComponent implements OnInit {
   ngOnInit(): void {
     this.cargarTurnos();
     this.cargarServicios();
+    this.cargarDiasBloqueados();
     this.generarDiasSemana();
+  }
+
+  cargarDiasBloqueados(): void {
+    this.diasBloqueadosService.obtenerDiasBloqueados().subscribe({
+      next: (data) => {
+        this.diasBloqueados = data;
+        this.diasBloqueadosSet = new Set(data.map(d => d.fecha));
+      },
+      error: (err) => {
+        console.error('Error al cargar días bloqueados:', err);
+      }
+    });
+  }
+
+  estaDiaBloqueado(fecha: string): boolean {
+    return this.diasBloqueadosSet.has(fecha);
+  }
+
+  obtenerMotivoBloqueado(fecha: string): string {
+    const dia = this.diasBloqueados.find(d => d.fecha === fecha);
+    return dia?.motivo || 'Día no disponible';
   }
 
   cargarServicios(): void {
@@ -99,6 +125,19 @@ export class DashboardClienteComponent implements OnInit {
     this.fechaSeleccionada = '';
     this.todosLosHorarios = [];
     this.turnosDisponibles = [];
+
+    // Scroll automático a la sección de días (solo en móviles)
+    if (this.serviciosSeleccionados.length > 0) {
+      setTimeout(() => {
+        const diasSection = document.querySelector('.dias-section');
+        if (diasSection && window.innerWidth <= 768) {
+          diasSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100);
+    }
   }
 
   estaSeleccionado(servicio: Servicio): boolean {
@@ -172,6 +211,17 @@ export class DashboardClienteComponent implements OnInit {
     // Solo buscar horarios si ya hay servicios seleccionados
     if (this.serviciosSeleccionados.length > 0) {
       this.buscarTurnosDisponibles();
+
+      // Scroll automático a la sección de horarios (solo en móviles)
+      setTimeout(() => {
+        const horariosSection = document.querySelector('.horarios-section');
+        if (horariosSection && window.innerWidth <= 768) {
+          horariosSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 300); // Esperar un poco más para que se carguen los horarios
     }
   }
 
@@ -319,6 +369,10 @@ export class DashboardClienteComponent implements OnInit {
     this.mostrarFormulario = false;
     this.mostrarHorarios = false;
     this.diaSeleccionado = '';
+  }
+
+  volverAlHome(): void {
+    this.router.navigate(['/home']);
   }
 
   cerrarSesion(): void {

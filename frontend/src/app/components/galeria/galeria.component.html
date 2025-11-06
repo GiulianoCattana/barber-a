@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="dashboard-header">
     <div class="header-content">
-      <h1>Galería de Trabajos</h1>
+      <h1>Gestión de Contenido</h1>
       <div class="user-info">
         <span>{{ usuario?.nombre }}</span>
         <button (click)="volverDashboard()" class="btn-back">Volver al Dashboard</button>
@@ -11,17 +11,41 @@
     </div>
   </div>
 
+  <!-- Tabs Navigation -->
+  <div class="tabs-container">
+    <button
+      class="tab-btn"
+      [class.active]="vistaActual === 'galeria'"
+      (click)="cambiarVista('galeria')">
+      📸 Galería de Trabajos
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="vistaActual === 'slider'"
+      (click)="cambiarVista('slider')">
+      🖼️ Slider Home
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="vistaActual === 'servicios'"
+      (click)="cambiarVista('servicios')">
+      ✨ Servicios Home
+    </button>
+  </div>
+
   <!-- Main Content -->
   <div class="dashboard-content">
     <!-- Alerts -->
     <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
     <div *ngIf="error" class="alert-error">{{ error }}</div>
 
-    <!-- Add Item Button -->
-    <div class="section-header">
-      <h2>Gestionar Galería</h2>
-      <button (click)="abrirFormulario()" class="btn-primary">Agregar Nuevo Item</button>
-    </div>
+    <!-- SECCIÓN: GALERÍA DE TRABAJOS -->
+    <div *ngIf="vistaActual === 'galeria'">
+      <!-- Add Item Button -->
+      <div class="section-header">
+        <h2>Gestionar Galería</h2>
+        <button (click)="abrirFormulario()" class="btn-primary">Agregar Nuevo Item</button>
+      </div>
 
     <!-- Form Modal -->
     <div *ngIf="mostrarFormulario" class="modal-overlay" (click)="cerrarFormulario()">
@@ -65,7 +89,7 @@
 
           <div *ngIf="editando && itemActual.url_imagen" class="preview-actual">
             <p>Imagen actual:</p>
-            <img [src]="'http://localhost:3000' + itemActual.url_imagen" alt="{{ itemActual.titulo }}">
+            <img [src]="getImageUrl(itemActual.url_imagen)" alt="{{ itemActual.titulo }}">
           </div>
 
           <div class="form-actions">
@@ -80,7 +104,7 @@
     <div class="galeria-grid" *ngIf="items.length > 0">
       <div *ngFor="let item of items" class="galeria-card">
         <div class="imagen-container">
-          <img [src]="'http://localhost:3000' + item.url_imagen" [alt]="item.titulo">
+          <img [src]="getImageUrl(item.url_imagen)" [alt]="item.titulo">
         </div>
         <div class="card-body">
           <h3>{{ item.titulo }}</h3>
@@ -95,6 +119,182 @@
 
     <div *ngIf="items.length === 0" class="no-items">
       <p>No hay items en la galería. Agrega tu primer trabajo!</p>
+    </div>
+  </div>
+
+    <!-- SECCIÓN: SLIDER HOME -->
+    <div *ngIf="vistaActual === 'slider'">
+      <div class="section-header">
+        <h2>Gestionar Slider del Home</h2>
+        <button (click)="abrirFormSlider()" class="btn-primary">Agregar Nueva Imagen</button>
+      </div>
+
+      <!-- Form Modal Slider -->
+      <div *ngIf="mostrarFormSlider" class="modal-overlay" (click)="cerrarFormSlider()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <h3>{{ editandoSlider ? 'Editar Imagen' : 'Nueva Imagen' }}</h3>
+          <form (ngSubmit)="guardarSlider()">
+            <div class="form-group">
+              <label for="alt_text">Texto Alternativo:</label>
+              <input
+                type="text"
+                id="alt_text"
+                [(ngModel)]="sliderActual.alt_text"
+                name="alt_text"
+                class="form-control"
+                placeholder="Descripción de la imagen"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="orden">Orden:</label>
+              <input
+                type="number"
+                id="orden"
+                [(ngModel)]="sliderActual.orden"
+                name="orden"
+                class="form-control"
+                min="1"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="imagenSlider">Imagen:</label>
+              <input
+                type="file"
+                id="imagenSlider"
+                (change)="onFileSlider($event)"
+                accept="image/*"
+                class="form-control-file">
+              <small class="form-text">{{ editandoSlider ? 'Selecciona una nueva imagen solo si deseas cambiarla' : 'Selecciona una imagen' }}</small>
+            </div>
+
+            <div *ngIf="editandoSlider && sliderActual.imagen_url" class="preview-actual">
+              <p>Imagen actual:</p>
+              <img [src]="getImageUrl(sliderActual.imagen_url)" [alt]="sliderActual.alt_text">
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">{{ editandoSlider ? 'Actualizar' : 'Crear' }}</button>
+              <button type="button" (click)="cerrarFormSlider()" class="btn-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Slider Grid -->
+      <div class="galeria-grid" *ngIf="sliderImagenes.length > 0">
+        <div *ngFor="let slider of sliderImagenes" class="galeria-card">
+          <div class="imagen-container">
+            <img [src]="getImageUrl(slider.imagen_url)" [alt]="slider.alt_text">
+            <div class="orden-badge">Orden: {{ slider.orden }}</div>
+          </div>
+          <div class="card-body">
+            <h3>{{ slider.alt_text }}</h3>
+            <div class="card-actions">
+              <button (click)="editarSlider(slider)" class="btn-edit">Editar</button>
+              <button (click)="eliminarSlider(slider.id!)" class="btn-delete">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="sliderImagenes.length === 0" class="no-items">
+        <p>No hay imágenes en el slider. Agrega la primera!</p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: SERVICIOS HOME -->
+    <div *ngIf="vistaActual === 'servicios'">
+      <div class="section-header">
+        <h2>Gestionar Servicios del Home</h2>
+        <button (click)="abrirFormServicio()" class="btn-primary">Agregar Nuevo Servicio</button>
+      </div>
+
+      <!-- Form Modal Servicios -->
+      <div *ngIf="mostrarFormServicio" class="modal-overlay" (click)="cerrarFormServicio()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <h3>{{ editandoServicio ? 'Editar Servicio' : 'Nuevo Servicio' }}</h3>
+          <form (ngSubmit)="guardarServicio()">
+            <div class="form-group">
+              <label for="nombre">Nombre del Servicio:</label>
+              <input
+                type="text"
+                id="nombre"
+                [(ngModel)]="servicioActual.nombre"
+                name="nombre"
+                class="form-control"
+                placeholder="Ej: Corte de Cabello"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="descripcionServ">Descripción:</label>
+              <textarea
+                id="descripcionServ"
+                [(ngModel)]="servicioActual.descripcion"
+                name="descripcionServ"
+                class="form-control"
+                placeholder="Describe el servicio..."
+                rows="4"
+                required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="icono">Icono (Emoji):</label>
+              <input
+                type="text"
+                id="icono"
+                [(ngModel)]="servicioActual.icono"
+                name="icono"
+                class="form-control"
+                placeholder="✨"
+                maxlength="5"
+                required>
+              <small class="form-text">Usa un emoji como icono (ejemplo: ✂️, 💈, ✨)</small>
+            </div>
+
+            <div class="form-group">
+              <label for="ordenServ">Orden:</label>
+              <input
+                type="number"
+                id="ordenServ"
+                [(ngModel)]="servicioActual.orden"
+                name="ordenServ"
+                class="form-control"
+                min="1"
+                required>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">{{ editandoServicio ? 'Actualizar' : 'Crear' }}</button>
+              <button type="button" (click)="cerrarFormServicio()" class="btn-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Servicios Grid -->
+      <div class="servicios-admin-grid" *ngIf="homeServicios.length > 0">
+        <div *ngFor="let servicio of homeServicios" class="servicio-admin-card">
+          <div class="servicio-header">
+            <span class="servicio-icono-grande">{{ servicio.icono }}</span>
+            <span class="orden-badge">Orden: {{ servicio.orden }}</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ servicio.nombre }}</h3>
+            <p>{{ servicio.descripcion }}</p>
+            <div class="card-actions">
+              <button (click)="editarServicio(servicio)" class="btn-edit">Editar</button>
+              <button (click)="eliminarServicio(servicio.id!)" class="btn-delete">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="homeServicios.length === 0" class="no-items">
+        <p>No hay servicios configurados. Agrega el primero!</p>
+      </div>
     </div>
   </div>
 </div>

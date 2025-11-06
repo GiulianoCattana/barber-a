@@ -5,7 +5,10 @@
 
   <header class="dashboard-header">
     <div class="header-content">
-      <h1>Mi Panel de Cliente</h1>
+      <div class="header-left">
+        <button (click)="volverAlHome()" class="btn-home">← Volver al Home</button>
+        <h1>Mi Panel de Cliente</h1>
+      </div>
       <div class="user-info">
         <span>Hola, {{ usuario?.nombre }}</span>
         <button (click)="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
@@ -51,23 +54,34 @@
       </div>
 
       <!-- PASO 2: Seleccionar Día (solo si hay servicio seleccionado) -->
-      <div *ngIf="mostrarFormulario" class="paso-dia">
+      <div *ngIf="mostrarFormulario" class="paso-dia dias-section">
         <h3>2. Selecciona el día</h3>
         <div class="dias-semana">
           <button
             *ngFor="let dia of diasDisponibles"
             class="dia-btn"
             [class.activo]="diaSeleccionado === dia.nombre"
+            [class.bloqueado]="estaDiaBloqueado(dia.fecha)"
+            [disabled]="estaDiaBloqueado(dia.fecha)"
             (click)="seleccionarDia(dia)"
+            [title]="estaDiaBloqueado(dia.fecha) ? 'Día no disponible: ' + obtenerMotivoBloqueado(dia.fecha) : ''"
           >
             {{ dia.nombre }}
             <span class="dia-fecha">{{ dia.fecha | date:'dd/MM' }}</span>
+            <span *ngIf="estaDiaBloqueado(dia.fecha)" class="icono-bloqueado">🔒</span>
           </button>
+        </div>
+
+        <!-- Mensaje informativo si hay días bloqueados -->
+        <div *ngIf="diasBloqueados.length > 0" class="info-dias-bloqueados">
+          <p class="aviso-bloqueados">
+            ⚠️ Algunos días no están disponibles para reservas
+          </p>
         </div>
       </div>
 
       <!-- PASO 3: Seleccionar Horario (solo si hay servicio y día seleccionados) -->
-      <div *ngIf="mostrarHorarios" class="paso-horario">
+      <div *ngIf="mostrarHorarios" class="paso-horario horarios-section">
         <h3>3. Selecciona el horario</h3>
         <p class="info-servicio">
           Servicios: <strong>{{ getNombresServicios() }}</strong> ({{ getDuracionTotal() }} minutos)

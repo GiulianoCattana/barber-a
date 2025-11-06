@@ -36,6 +36,10 @@ export class RegistroComponent implements OnInit {
     }
   }
 
+  volverAlHome(): void {
+    this.router.navigate(['/home']);
+  }
+
   onSubmit(): void {
     this.errorMessage = '';
     this.loading = true;

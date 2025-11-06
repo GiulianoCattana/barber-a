@@ -68,6 +68,43 @@
   background-color: white;
 }
 
+/* Tabs Navigation */
+.tabs-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 0 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.85rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.tab-btn.active {
+  background: white;
+  color: #667eea;
+  border-color: white;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+}
+
 /* Main Content */
 .dashboard-content {
   max-width: 1600px;
@@ -565,5 +602,90 @@ textarea.form-control {
 
   .no-items p {
     font-size: 1rem;
+  }
+}
+
+/* Orden Badge */
+.orden-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(102, 126, 234, 0.95);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+/* Servicios Admin Grid */
+.servicios-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.servicio-admin-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  padding: 2rem;
+}
+
+.servicio-admin-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.servicio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+  position: relative;
+}
+
+.servicio-icono-grande {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.servicio-header .orden-badge {
+  position: static;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    padding: 1rem 1rem 0 1rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+  }
+
+  .servicios-admin-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .servicio-icono-grande {
+    font-size: 2.5rem;
   }
 }
