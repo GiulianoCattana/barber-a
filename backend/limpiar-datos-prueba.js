@@ -12,20 +12,32 @@ async function limpiarDatosPrueba() {
   try {
     console.log('Limpiando datos de prueba...\n');
 
-    // Limpiar horarios bloqueados
-    const bloqueados = await pool.query('DELETE FROM horarios_bloqueados RETURNING *');
-    console.log(`✓ Se eliminaron ${bloqueados.rowCount} horarios bloqueados`);
+    // 1. Eliminar todos los turnos
+    const turnosResult = await pool.query("DELETE FROM turnos WHERE id IS NOT NULL");
+    console.log(`✓ ${turnosResult.rowCount} turnos eliminados`);
 
-    // Verificar horarios bloqueados
-    const verBloqueados = await pool.query('SELECT COUNT(*) FROM horarios_bloqueados');
-    console.log(`  Horarios bloqueados restantes: ${verBloqueados.rows[0].count}`);
+    // 2. Eliminar todos los clientes (usuarios que no son admin)
+    const clientesResult = await pool.query("DELETE FROM usuarios WHERE rol != 'admin'");
+    console.log(`✓ ${clientesResult.rowCount} clientes eliminados`);
+
+    // 3. Limpiar horarios bloqueados
+    const bloqueados = await pool.query('DELETE FROM horarios_bloqueados');
+    console.log(`✓ ${bloqueados.rowCount} horarios bloqueados eliminados`);
+
+    // 4. Verificar qué quedó
+    console.log('\n--- Estado actual de la base de datos ---');
+
+    const usuariosRestantes = await pool.query("SELECT id, nombre, email, rol FROM usuarios");
+    console.log('\nUsuarios restantes:');
+    console.table(usuariosRestantes.rows);
+
+    const turnosRestantes = await pool.query("SELECT COUNT(*) as total FROM turnos");
+    console.log(`Turnos restantes: ${turnosRestantes.rows[0].total}`);
+
+    const serviciosRestantes = await pool.query("SELECT COUNT(*) as total FROM servicios");
+    console.log(`Servicios: ${serviciosRestantes.rows[0].total} (conservados)`);
 
     console.log('\n✓ Limpieza completada exitosamente');
-    console.log('\nResumen:');
-    console.log('- Turnos: Limpiados previamente (0 restantes)');
-    console.log(`- Horarios bloqueados: ${bloqueados.rowCount} eliminados`);
-    console.log('- Servicios: Conservados (no eliminados)');
-    console.log('- Usuarios: Conservados (no eliminados)');
 
     await pool.end();
   } catch (error) {

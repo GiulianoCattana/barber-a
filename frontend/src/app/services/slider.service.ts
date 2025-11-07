@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SliderImagen {
   id?: number;
@@ -14,7 +15,7 @@ export interface SliderImagen {
   providedIn: 'root'
 })
 export class SliderService {
-  private apiUrl = 'http://localhost:3000/api/slider';
+  private apiUrl = `${environment.apiUrl}/slider`;
 
   constructor(private http: HttpClient) { }
 

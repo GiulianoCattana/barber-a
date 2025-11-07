@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Turno {
   id?: number;
@@ -29,7 +30,7 @@ export interface Horario {
   providedIn: 'root'
 })
 export class TurnosService {
-  private apiUrl = 'http://localhost:3000/api/turnos';
+  private apiUrl = `${environment.apiUrl}/turnos`;
 
   constructor(private http: HttpClient) { }
 

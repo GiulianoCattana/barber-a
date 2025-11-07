@@ -3,7 +3,7 @@ const http = require('http');
 // Test login del administrador
 const testAdminLogin = () => {
     const data = JSON.stringify({
-        email: 'admin@peluqueria.com',
+        email: 'wonderbarber2025@gmail.com',
         password: 'admin123'
     });
 

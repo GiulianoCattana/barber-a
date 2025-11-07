@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DiaBloqueado {
   id?: number;
@@ -13,7 +14,7 @@ export interface DiaBloqueado {
   providedIn: 'root'
 })
 export class DiasBloqueadosService {
-  private apiUrl = 'http://localhost:3000/api/dias-bloqueados';
+  private apiUrl = `${environment.apiUrl}/dias-bloqueados`;
 
   constructor(private http: HttpClient) { }
 

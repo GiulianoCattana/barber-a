@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface ItemGaleria {
   id?: number;
@@ -14,7 +15,7 @@ export interface ItemGaleria {
   providedIn: 'root'
 })
 export class GaleriaService {
-  private apiUrl = 'http://localhost:3000/api/galeria';
+  private apiUrl = `${environment.apiUrl}/galeria`;
 
   constructor(private http: HttpClient) { }
 

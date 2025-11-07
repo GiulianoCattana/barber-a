@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface HorarioBloqueado {
   id?: number;
@@ -14,7 +15,7 @@ export interface HorarioBloqueado {
   providedIn: 'root'
 })
 export class BloqueadosService {
-  private apiUrl = 'http://localhost:3000/api/bloqueados';
+  private apiUrl = `${environment.apiUrl}/bloqueados`;
 
   constructor(private http: HttpClient) { }
 
