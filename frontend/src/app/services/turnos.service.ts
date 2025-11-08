@@ -15,6 +15,7 @@ export interface Turno {
   duracion_total?: number;
   estado?: string;
   notas?: string;
+  metodo_pago?: string;
   cliente_nombre?: string;
   cliente_email?: string;
   cliente_telefono?: string;

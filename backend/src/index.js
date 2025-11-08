@@ -12,6 +12,9 @@ const bloqueadosRoutes = require('./routes/bloqueadosRoutes');
 const diasBloqueadosRoutes = require('./routes/diasBloqueados');
 const sliderRoutes = require('./routes/slider');
 const homeServiciosRoutes = require('./routes/homeServicios');
+const pagosRoutes = require('./routes/pagosRoutes');
+const suscripcionRoutes = require('./routes/suscripcionRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +47,9 @@ app.use('/api/bloqueados', bloqueadosRoutes);
 app.use('/api/dias-bloqueados', diasBloqueadosRoutes);
 app.use('/api/slider', sliderRoutes);
 app.use('/api/home-servicios', homeServiciosRoutes);
+app.use('/api/pagos', pagosRoutes);
+app.use('/api/suscripcion', suscripcionRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // Ruta de prueba
 app.get('/api', (req, res) => {

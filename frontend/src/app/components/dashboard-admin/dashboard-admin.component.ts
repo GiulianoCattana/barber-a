@@ -6,8 +6,10 @@ import { AuthService } from '../../services/auth.service';
 import { TurnosService, Turno } from '../../services/turnos.service';
 import { BloqueadosService, HorarioBloqueado } from '../../services/bloqueados.service';
 import { DiasBloqueadosService, DiaBloqueado } from '../../services/dias-bloqueados.service';
+import { PagosService, ConfiguracionPagos } from '../../services/pagos.service';
 import { ServiciosManagerComponent } from '../../admin/servicios-manager/servicios-manager.component';
 import { PerfilAdminComponent } from '../../admin/perfil-admin/perfil-admin.component';
+import { EstadoSuscripcionComponent } from '../estado-suscripcion/estado-suscripcion.component';
 import { ThemeService } from '../../services/theme.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -21,7 +23,7 @@ interface DiaDisponible {
 @Component({
   selector: 'app-dashboard-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, ServiciosManagerComponent, PerfilAdminComponent],
+  imports: [CommonModule, FormsModule, ServiciosManagerComponent, PerfilAdminComponent, EstadoSuscripcionComponent],
   templateUrl: './dashboard-admin.component.html',
   styleUrl: './dashboard-admin.component.css',
   encapsulation: ViewEncapsulation.None
@@ -67,11 +69,22 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   diasBloqueados: DiaBloqueado[] = [];
   diasBloqueadosSet: Set<string> = new Set();
 
+  // Variables para configuración de pagos
+  configuracionPagos: ConfiguracionPagos = {
+    alias_transferencia: '',
+    mensaje_transferencia: '',
+    tipo_pago: 'alias'
+  };
+  guardandoConfiguracion: boolean = false;
+  archivoQR: File | null = null;
+  previewQR: string | null = null;
+
   constructor(
     private authService: AuthService,
     private turnosService: TurnosService,
     private bloqueadosService: BloqueadosService,
     private diasBloqueadosService: DiasBloqueadosService,
+    private pagosService: PagosService,
     private router: Router,
     public themeService: ThemeService
   ) {
@@ -83,6 +96,7 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     this.cargarTurnos();
     this.configurarBusquedaTiempoReal();
     this.cargarDiasBloqueados();
+    this.cargarConfiguracionPagos();
   }
 
   ngOnDestroy(): void {
@@ -711,5 +725,112 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // Funciones para configuración de pagos
+  cargarConfiguracionPagos(): void {
+    this.pagosService.obtenerConfiguracion().subscribe({
+      next: (data) => {
+        this.configuracionPagos = {
+          ...data,
+          mensaje_transferencia: data.mensaje_transferencia || '',
+          alias_transferencia: data.alias_transferencia || ''
+        };
+        // Establecer preview del QR si existe
+        if (data.imagen_qr) {
+          this.previewQR = `http://localhost:3000${data.imagen_qr}`;
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar configuración de pagos:', err);
+        // Mantener valores por defecto si hay error
+      }
+    });
+  }
+
+  onArchivoQRSeleccionado(event: any): void {
+    const archivo = event.target.files[0];
+    if (archivo) {
+      // Validar que sea una imagen
+      if (!archivo.type.startsWith('image/')) {
+        this.error = 'Por favor selecciona un archivo de imagen válido';
+        setTimeout(() => this.error = '', 3000);
+        return;
+      }
+
+      // Validar tamaño (5MB máximo)
+      if (archivo.size > 5 * 1024 * 1024) {
+        this.error = 'La imagen no debe superar los 5MB';
+        setTimeout(() => this.error = '', 3000);
+        return;
+      }
+
+      this.archivoQR = archivo;
+
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewQR = e.target.result;
+      };
+      reader.readAsDataURL(archivo);
+    }
+  }
+
+  cancelarSeleccionQR(): void {
+    this.archivoQR = null;
+    // Si hay una imagen guardada previamente, restaurar su preview
+    if (this.configuracionPagos.imagen_qr) {
+      this.previewQR = `http://localhost:3000${this.configuracionPagos.imagen_qr}`;
+    } else {
+      this.previewQR = null;
+    }
+    // Limpiar el input file
+    const fileInput = document.getElementById('qr') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  guardarConfiguracionPagos(): void {
+    // Validación relajada: solo avisar si falta información crítica pero permitir guardar
+    // Esto permite al admin configurar parcialmente o limpiar campos
+
+    this.guardandoConfiguracion = true;
+    this.error = '';
+    this.mensaje = '';
+
+    console.log('Enviando configuración:', this.configuracionPagos);
+    console.log('Archivo QR:', this.archivoQR);
+
+    this.pagosService.actualizarConfiguracion(this.configuracionPagos, this.archivoQR || undefined).subscribe({
+      next: (response) => {
+        console.log('Respuesta del backend:', response);
+        this.mensaje = 'Configuración actualizada correctamente';
+        this.guardandoConfiguracion = false;
+        this.archivoQR = null;
+
+        // Actualizar con los datos de la respuesta del backend
+        if (response.configuracion) {
+          this.configuracionPagos = {
+            ...response.configuracion,
+            mensaje_transferencia: response.configuracion.mensaje_transferencia || '',
+            alias_transferencia: response.configuracion.alias_transferencia || ''
+          };
+
+          // Actualizar preview del QR si existe
+          if (response.configuracion.imagen_qr) {
+            this.previewQR = `http://localhost:3000${response.configuracion.imagen_qr}`;
+          }
+        }
+
+        setTimeout(() => this.mensaje = '', 3000);
+      },
+      error: (err) => {
+        console.error('Error del backend:', err);
+        this.error = err.error?.mensaje || 'Error al actualizar configuración';
+        this.guardandoConfiguracion = false;
+        setTimeout(() => this.error = '', 3000);
+      }
+    });
+  }
 }
- 
+

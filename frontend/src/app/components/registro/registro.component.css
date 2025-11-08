@@ -125,3 +125,212 @@ label {
 .login-link a:hover {
   text-decoration: underline;
 }
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+/* Tablets (hasta 768px) */
+@media (max-width: 768px) {
+  .registro-container {
+    padding: 15px;
+  }
+
+  .registro-card {
+    padding: 30px 25px;
+    max-width: 100%;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    margin-bottom: 25px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  .form-control {
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    padding: 11px;
+    font-size: 15px;
+  }
+
+  .error-message {
+    padding: 9px;
+    font-size: 13px;
+  }
+
+  .login-link {
+    font-size: 13px;
+  }
+}
+
+/* Móviles medianos (hasta 576px) */
+@media (max-width: 576px) {
+  .registro-container {
+    padding: 10px;
+  }
+
+  .registro-card {
+    padding: 25px 20px;
+    border-radius: 8px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .form-control {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .btn-primary {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .btn-home {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .error-message {
+    padding: 8px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .login-link {
+    margin-top: 15px;
+    font-size: 12px;
+  }
+}
+
+/* Móviles pequeños (hasta 400px) */
+@media (max-width: 400px) {
+  .registro-container {
+    padding: 8px;
+  }
+
+  .registro-card {
+    padding: 20px 15px;
+    border-radius: 6px;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    margin-bottom: 18px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  label {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  .form-control {
+    padding: 9px;
+    font-size: 12px;
+  }
+
+  .btn-primary {
+    padding: 9px;
+    font-size: 13px;
+  }
+
+  .btn-home {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .error-message {
+    padding: 7px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .login-link {
+    margin-top: 12px;
+    font-size: 11px;
+  }
+}
+
+/* Landscape para móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .registro-container {
+    padding: 10px;
+  }
+
+  .registro-card {
+    padding: 20px;
+    max-width: 600px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    margin-bottom: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-control {
+    padding: 8px;
+  }
+
+  .btn-primary {
+    padding: 8px;
+  }
+
+  .error-message {
+    padding: 7px;
+    margin-bottom: 10px;
+  }
+
+  .login-link {
+    margin-top: 10px;
+  }
+}

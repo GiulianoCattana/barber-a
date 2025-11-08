@@ -129,6 +129,52 @@
             ></textarea>
           </div>
 
+          <div class="form-group">
+            <label>Método de pago:</label>
+            <div class="metodo-pago-opciones">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="metodo_pago"
+                  value="efectivo"
+                  [(ngModel)]="nuevoTurno.metodo_pago"
+                />
+                <span>Efectivo</span>
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="metodo_pago"
+                  value="transferencia"
+                  [(ngModel)]="nuevoTurno.metodo_pago"
+                />
+                <span>Transferencia</span>
+              </label>
+            </div>
+            <div *ngIf="nuevoTurno.metodo_pago === 'transferencia' && configuracionPagos" class="info-transferencia">
+              <!-- Mostrar Alias -->
+              <div *ngIf="configuracionPagos.tipo_pago === 'alias'">
+                <p><strong>Alias:</strong> {{ configuracionPagos.alias_transferencia }}</p>
+                <p class="mensaje-transferencia">{{ configuracionPagos.mensaje_transferencia }}</p>
+              </div>
+
+              <!-- Mostrar QR -->
+              <div *ngIf="configuracionPagos.tipo_pago === 'qr' && configuracionPagos.imagen_qr" class="qr-container">
+                <p><strong>Escanea el código QR:</strong></p>
+                <img [src]="'http://localhost:3000' + configuracionPagos.imagen_qr" alt="QR de transferencia" class="qr-image">
+                <p class="mensaje-transferencia">{{ configuracionPagos.mensaje_transferencia }}</p>
+              </div>
+
+              <!-- Link de Mercado Pago -->
+              <div *ngIf="configuracionPagos.tipo_pago === 'mercadopago' && obtenerLinkMercadoPago()" class="mercadopago-container">
+                <p><strong>Paga directamente con Mercado Pago:</strong></p>
+                <a [href]="obtenerLinkMercadoPago()" target="_blank" class="btn-mercadopago-cliente">
+                  💳 Ir a Mercado Pago
+                </a>
+              </div>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="submit" class="btn-primary">
               Confirmar Reserva

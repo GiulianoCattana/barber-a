@@ -336,11 +336,27 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .servicios-manager {
+    padding: 15px;
+  }
+
+  .servicios-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+}
+
 @media (max-width: 768px) {
+  .servicios-manager {
+    padding: 10px;
+  }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 15px;
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .header-left {
@@ -357,17 +373,152 @@
   .btn-volver {
     width: 100%;
     justify-content: center;
+    padding: 9px 18px;
   }
 
   .btn-nuevo {
     width: 100%;
+    padding: 11px 22px;
   }
 
   .servicios-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .servicio-card {
+    padding: 18px;
+  }
+
+  .servicio-header h3 {
+    font-size: 18px;
+  }
+
+  .servicio-info {
+    padding: 12px;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .formulario-container {
+    padding: 25px;
+  }
+}
+
+@media (max-width: 576px) {
+  .servicios-manager {
+    padding: 8px;
+  }
+
+  .header {
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+
+  .btn-volver {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .btn-nuevo {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .servicios-grid {
+    gap: 12px;
+  }
+
+  .servicio-card {
+    padding: 15px;
+  }
+
+  .servicio-header h3 {
+    font-size: 17px;
+  }
+
+  .servicio-descripcion {
+    font-size: 13px;
+    min-height: 35px;
+  }
+
+  .servicio-info {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .info-item .label {
+    font-size: 11px;
+  }
+
+  .info-item .value {
+    font-size: 16px;
+  }
+
+  .servicio-acciones {
+    gap: 8px;
+  }
+
+  .btn-editar,
+  .btn-eliminar,
+  .btn-activar {
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  .formulario-container {
+    padding: 20px;
+    width: 95%;
+  }
+
+  .formulario-container h3 {
+    font-size: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 9px;
+    font-size: 13px;
+  }
+
+  .btn-guardar,
+  .btn-cancelar {
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .servicio-header h3 {
+    font-size: 16px;
+  }
+
+  .servicio-info {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .formulario-container {
+    padding: 15px;
   }
 }

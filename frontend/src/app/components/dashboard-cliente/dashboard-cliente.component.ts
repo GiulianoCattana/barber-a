@@ -7,6 +7,7 @@ import { TurnosService, Turno, Horario } from '../../services/turnos.service';
 import { ServiciosService, Servicio } from '../../services/servicios.service';
 import { DiasBloqueadosService, DiaBloqueado } from '../../services/dias-bloqueados.service';
 import { ThemeService } from '../../services/theme.service';
+import { PagosService, ConfiguracionPagos } from '../../services/pagos.service';
 
 interface DiaDisponible {
   nombre: string;
@@ -36,7 +37,8 @@ export class DashboardClienteComponent implements OnInit {
     fecha: '',
     hora: '',
     servicio_id: undefined,
-    notas: ''
+    notas: '',
+    metodo_pago: 'efectivo'
   };
 
   mostrarFormulario: boolean = false;
@@ -49,12 +51,14 @@ export class DashboardClienteComponent implements OnInit {
   horaSeleccionada: string = '';
   diasBloqueados: DiaBloqueado[] = [];
   diasBloqueadosSet: Set<string> = new Set();
+  configuracionPagos: ConfiguracionPagos | null = null;
 
   constructor(
     private authService: AuthService,
     private turnosService: TurnosService,
     private serviciosService: ServiciosService,
     private diasBloqueadosService: DiasBloqueadosService,
+    private pagosService: PagosService,
     private router: Router,
     public themeService: ThemeService
   ) {
@@ -65,6 +69,7 @@ export class DashboardClienteComponent implements OnInit {
     this.cargarTurnos();
     this.cargarServicios();
     this.cargarDiasBloqueados();
+    this.cargarConfiguracionPagos();
     this.generarDiasSemana();
   }
 
@@ -78,6 +83,32 @@ export class DashboardClienteComponent implements OnInit {
         console.error('Error al cargar días bloqueados:', err);
       }
     });
+  }
+
+  cargarConfiguracionPagos(): void {
+    this.pagosService.obtenerConfiguracion().subscribe({
+      next: (data) => {
+        this.configuracionPagos = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar configuración de pagos:', err);
+      }
+    });
+  }
+
+  obtenerLinkMercadoPago(): string {
+    if (!this.configuracionPagos?.link_mercadopago) {
+      return '';
+    }
+
+    const link = this.configuracionPagos.link_mercadopago;
+
+    // Si el link no empieza con http:// o https://, agregar https://
+    if (!link.startsWith('http://') && !link.startsWith('https://')) {
+      return 'https://' + link;
+    }
+
+    return link;
   }
 
   estaDiaBloqueado(fecha: string): boolean {
@@ -178,9 +209,11 @@ export class DashboardClienteComponent implements OnInit {
         // (el backend se encarga de filtrar los horarios pasados)
         const esHoy = offset === 0;
         const horaActual = hoy.getHours();
+        const minutosActuales = hoy.getMinutes();
 
-        // Incluir el día de hoy solo si no son más de las 22:00 (último turno)
-        if (!esHoy || horaActual < 22) {
+        // Incluir el día de hoy solo si aún no son las 22:30 (último turno)
+        // Permitir hasta las 22:30, después de eso no mostrar el día de hoy
+        if (!esHoy || horaActual < 22 || (horaActual === 22 && minutosActuales < 30)) {
           const nombreDia = esHoy ? 'Hoy' : nombresDiasCortos[diaSemana];
           // Formatear la fecha correctamente sin conversión a UTC
           const year = fecha.getFullYear();
@@ -326,7 +359,8 @@ export class DashboardClienteComponent implements OnInit {
           fecha: this.fechaSeleccionada,
           hora: '',
           servicio_id: this.serviciosSeleccionados[0]?.id,
-          notas: ''
+          notas: '',
+          metodo_pago: 'efectivo'
         };
 
         // Volver a buscar horarios disponibles para el mismo día
@@ -359,7 +393,8 @@ export class DashboardClienteComponent implements OnInit {
       fecha: '',
       hora: '',
       servicio_id: undefined,
-      notas: ''
+      notas: '',
+      metodo_pago: 'efectivo'
     };
     this.fechaSeleccionada = '';
     this.serviciosSeleccionados = [];

@@ -1,22 +1,34 @@
-# Sistema de Gestión de Peluquería
+# 💈 Sistema de Gestión de Peluquería WonderBarber
 
-Sistema completo de gestión de turnos para peluquería con Angular y PostgreSQL.
+Sistema completo de gestión con **sistema de suscripciones**, gestión de turnos, servicios, galería y más.
 
-## Características
+## 🚀 Características Principales
 
-- **Autenticación JWT**: Sistema seguro de login con roles (cliente/administrador)
-- **Dashboard de Clientes**: Los clientes pueden:
-  - Registrarse y crear cuenta
-  - Ver turnos disponibles por fecha
-  - Reservar turnos seleccionando horario y servicio
-  - Ver sus turnos reservados
-  - Cancelar sus propios turnos
-- **Dashboard de Administrador**: Los administradores pueden:
-  - Ver todos los turnos del sistema
-  - Filtrar turnos por estado (pendiente, confirmado, cancelado)
-  - Confirmar turnos de clientes
-  - Cancelar turnos
-  - Ver estadísticas en tiempo real
+### Sistema de Suscripciones 💰
+- **30 días de prueba GRATIS**
+- Suscripción mensual de $25,000
+- 3 días de gracia post-vencimiento
+- Integración con Mercado Pago
+- Activación semi-automática o con webhooks
+
+### Dashboard de Clientes
+- Registro y autenticación segura
+- Ver turnos disponibles por fecha
+- Reservar turnos con horario y servicio
+- Ver historial de turnos
+- Cancelar reservas
+
+### Dashboard de Administrador
+- **Sistema de suscripción visible en todo momento**
+- Gestión completa de turnos
+- Gestión de servicios y precios
+- Galería de trabajos
+- Bloqueo de horarios y días completos
+- Configuración de métodos de pago (Alias, QR, Mercado Pago)
+- Slider del home page
+- Estadísticas en tiempo real
+- Historial de clientes
+- Notificaciones de turnos próximos
 
 ## Tecnologías Utilizadas
 
@@ -101,12 +113,34 @@ El frontend estará disponible en `http://localhost:4200`
 
 ## Usuarios por Defecto
 
-El sistema crea automáticamente un usuario administrador:
+El sistema tiene un usuario administrador:
 
-- **Email**: admin@peluqueria.com
-- **Password**: admin123
+- **Email**: wonderbarber2025@gmail.com
+- **Password**: 123456
+- **Suscripción**: 30 días de prueba gratis
 
 ⚠️ **IMPORTANTE**: Cambia esta contraseña en producción.
+
+## Sistema de Suscripciones
+
+### Configuración
+- **Período de prueba**: 30 días gratis
+- **Costo mensual**: $25,000
+- **Período de gracia**: 3 días después del vencimiento
+- **Link de pago**: https://mpago.la/2Cf9bkf
+
+### Cómo Funciona
+1. El admin tiene 30 días de prueba gratis
+2. 7 días antes de vencer aparece el botón de renovación
+3. Al hacer clic se abre Mercado Pago
+4. Después de pagar, ingresa el ID de pago
+5. La suscripción se renueva por 30 días más
+
+### Documentación
+- `SISTEMA-SUSCRIPCIONES-RESUMEN.md` - Descripción completa del sistema
+- `CONFIGURACION-MERCADOPAGO.md` - Configurar Mercado Pago
+- `CONFIGURAR-WEBHOOKS-MP.md` - Webhooks automáticos
+- `LISTO-PARA-PRODUCCION.md` - Guía de despliegue completa
 
 ## Uso del Sistema
 

@@ -3,15 +3,13 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const {
-  obtenerItems,
-  crearItem,
-  actualizarItem,
-  eliminarItem
-} = require('../controllers/galeriaController');
 const { verificarToken, verificarAdmin, verificarSuscripcionActiva } = require('../middleware/auth');
+const {
+  obtenerConfiguracion,
+  actualizarConfiguracion
+} = require('../controllers/pagosController');
 
-// Configurar almacenamiento de multer
+// Configurar almacenamiento de multer para QR
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../../uploads');
@@ -25,7 +23,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'galeria-' + uniqueSuffix + path.extname(file.originalname));
+    cb(null, 'qr-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -50,12 +48,10 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
-// Rutas públicas (pueden verse sin autenticación)
-router.get('/', obtenerItems);
+// Ruta pública - obtener configuración de pagos
+router.get('/configuracion', obtenerConfiguracion);
 
-// Rutas protegidas solo para admin
-router.post('/', verificarToken, verificarAdmin, verificarSuscripcionActiva, upload.single('imagen'), crearItem);
-router.put('/:id', verificarToken, verificarAdmin, verificarSuscripcionActiva, upload.single('imagen'), actualizarItem);
-router.delete('/:id', verificarToken, verificarAdmin, verificarSuscripcionActiva, eliminarItem);
+// Ruta protegida - actualizar configuración (solo admin)
+router.put('/configuracion', verificarToken, verificarAdmin, verificarSuscripcionActiva, upload.single('imagen_qr'), actualizarConfiguracion);
 
 module.exports = router;

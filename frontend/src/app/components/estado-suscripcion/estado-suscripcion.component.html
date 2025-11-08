@@ -1,0 +1,72 @@
+<div *ngIf="!cargando && estadoSuscripcion" class="suscripcion-container">
+  <div class="alert" [ngClass]="obtenerClaseAlerta()" role="alert">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="flex-grow-1">
+        <h6 class="alert-heading mb-2">
+          <i class="bi" [ngClass]="{
+            'bi-check-circle-fill': estadoSuscripcion.estado === 'activa' && estadoSuscripcion.dias_restantes > 7,
+            'bi-exclamation-triangle-fill': estadoSuscripcion.estado === 'activa' && estadoSuscripcion.dias_restantes <= 7 || estadoSuscripcion.estado === 'gracia',
+            'bi-x-circle-fill': estadoSuscripcion.estado === 'bloqueada' || estadoSuscripcion.estado === 'vencida'
+          }"></i>
+          {{ suscripcionService.obtenerTextoEstado(estadoSuscripcion.estado, estadoSuscripcion.es_periodo_prueba) }}
+        </h6>
+        <p class="mb-1">{{ estadoSuscripcion.mensaje }}</p>
+        <small *ngIf="estadoSuscripcion.puede_operar">
+          Vence el: {{ estadoSuscripcion.fecha_vencimiento | date:'dd/MM/yyyy' }}
+        </small>
+        <small *ngIf="!estadoSuscripcion.puede_operar" class="fw-bold">
+          No puedes crear ni modificar contenido hasta renovar la suscripción
+        </small>
+      </div>
+      <div *ngIf="mostrarBotonPago()" class="ms-3">
+        <button class="btn btn-primary" (click)="abrirPago()" [disabled]="mostrarConfirmacionPago">
+          <i class="bi bi-credit-card"></i> Renovar Suscripción (${{ estadoSuscripcion.monto_mensual | number:'1.0-0' }})
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de confirmación de pago -->
+  <div *ngIf="mostrarFormularioPago" class="alert alert-info mt-3" role="alert">
+    <h6 class="alert-heading mb-3">
+      <i class="bi bi-credit-card-fill"></i> Confirmar Pago
+    </h6>
+    <p class="mb-3">Para activar tu suscripción, ingresá el <strong>ID de pago</strong> que aparece en tu comprobante de Mercado Pago.</p>
+
+    <div class="mb-3">
+      <label for="pagoId" class="form-label fw-bold">ID de Pago de Mercado Pago:</label>
+      <input
+        type="text"
+        class="form-control"
+        id="pagoId"
+        [(ngModel)]="pagoId"
+        placeholder="Ej: 1234567890"
+        [disabled]="procesandoPago"
+      >
+      <small class="form-text text-muted">
+        Lo encontrás en tu comprobante de pago como "ID de operación" o "Código de pago"
+      </small>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-success" (click)="confirmarPago()" [disabled]="procesandoPago || !pagoId">
+        <span *ngIf="!procesandoPago">
+          <i class="bi bi-check-lg"></i> Confirmar y Activar
+        </span>
+        <span *ngIf="procesandoPago">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Verificando pago...
+        </span>
+      </button>
+      <button class="btn btn-outline-secondary" (click)="cancelarConfirmacion()" [disabled]="procesandoPago">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="cargando" class="text-center py-3">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+</div>

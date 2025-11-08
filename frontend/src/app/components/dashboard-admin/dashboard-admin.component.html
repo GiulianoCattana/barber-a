@@ -18,6 +18,9 @@
   </header>
 
   <main class="dashboard-content">
+    <!-- Estado de Suscripción -->
+    <app-estado-suscripcion></app-estado-suscripcion>
+
     <div *ngIf="mensaje" class="alert-success">{{ mensaje }}</div>
     <div *ngIf="error" class="alert-error">{{ error }}</div>
 
@@ -73,6 +76,12 @@
         [class.activo]="vistaActual === 'perfil'"
         (click)="cambiarVista('perfil')">
         Mi Perfil
+      </button>
+      <button
+        class="vista-btn"
+        [class.activo]="vistaActual === 'configuracion'"
+        (click)="cambiarVista('configuracion')">
+        Configuración
       </button>
     </div>
 
@@ -468,6 +477,156 @@
     <!-- Vista de Perfil -->
     <div *ngIf="vistaActual === 'perfil'">
       <app-perfil-admin (volverDashboard)="cambiarVista('turnos')"></app-perfil-admin>
+    </div>
+
+    <!-- Vista de Configuración -->
+    <div *ngIf="vistaActual === 'configuracion'" class="configuracion-container">
+      <div class="configuracion-card">
+        <h2>⚙️ Configuración de Pagos</h2>
+
+        <div class="form-section">
+          <h3>Transferencia Bancaria</h3>
+          <p class="form-description">Configura cómo los clientes verán la información de pago cuando seleccionen transferencia.</p>
+
+          <form (ngSubmit)="guardarConfiguracionPagos()" class="config-form">
+            <!-- Selector de tipo de pago -->
+            <div class="form-group">
+              <label>Método de pago:</label>
+              <div class="tipo-pago-opciones">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="tipo_pago"
+                    value="alias"
+                    [(ngModel)]="configuracionPagos.tipo_pago"
+                  />
+                  <span>📝 Alias de transferencia</span>
+                </label>
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="tipo_pago"
+                    value="qr"
+                    [(ngModel)]="configuracionPagos.tipo_pago"
+                  />
+                  <span>📱 Código QR</span>
+                </label>
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="tipo_pago"
+                    value="mercadopago"
+                    [(ngModel)]="configuracionPagos.tipo_pago"
+                  />
+                  <span>💳 Mercado Pago</span>
+                </label>
+              </div>
+              <small class="form-help">Elige el método de pago que verán los clientes.</small>
+            </div>
+
+            <!-- Campo Alias (solo si tipo es 'alias') -->
+            <div class="form-group" *ngIf="configuracionPagos.tipo_pago === 'alias'">
+              <label for="alias">Alias de transferencia:</label>
+              <input
+                type="text"
+                id="alias"
+                [(ngModel)]="configuracionPagos.alias_transferencia"
+                name="alias"
+                class="form-control"
+                placeholder="Ej: wonderbarbeia"
+                [required]="configuracionPagos.tipo_pago === 'alias'">
+              <small class="form-help">Este alias será visible para los clientes cuando seleccionen transferencia.</small>
+            </div>
+
+            <!-- Campo QR (solo si tipo es 'qr') -->
+            <div class="form-group" *ngIf="configuracionPagos.tipo_pago === 'qr'">
+              <label for="qr">Imagen del QR:</label>
+              <div class="file-input-wrapper">
+                <input
+                  type="file"
+                  id="qr"
+                  (change)="onArchivoQRSeleccionado($event)"
+                  accept="image/*"
+                  class="file-input">
+                <label for="qr" class="file-input-label">
+                  📸 {{ archivoQR ? archivoQR.name : 'Seleccionar imagen QR' }}
+                </label>
+              </div>
+              <small class="form-help">Sube una imagen del código QR para que los clientes puedan escanearlo.</small>
+
+              <!-- Preview del QR -->
+              <div *ngIf="previewQR" class="qr-preview">
+                <div class="qr-preview-header">
+                  <span>Vista previa de la imagen</span>
+                  <button
+                    type="button"
+                    class="btn-cancelar-qr"
+                    (click)="cancelarSeleccionQR()"
+                    title="Cancelar selección">
+                    ✕
+                  </button>
+                </div>
+                <img [src]="previewQR" alt="Preview QR">
+                <small class="qr-help" *ngIf="archivoQR">
+                  Nueva imagen seleccionada. Haz clic en "Guardar Cambios" para aplicar o en la "✕" para cancelar.
+                </small>
+              </div>
+            </div>
+
+            <!-- Mensaje (común para ambos tipos) -->
+            <div class="form-group">
+              <label for="mensaje">Mensaje informativo:</label>
+              <textarea
+                id="mensaje"
+                [(ngModel)]="configuracionPagos.mensaje_transferencia"
+                name="mensaje"
+                class="form-control"
+                rows="3"
+                placeholder="Ej: Por favor, realiza la transferencia y envía el comprobante"></textarea>
+              <small class="form-help">Mensaje adicional que verán los clientes (opcional).</small>
+            </div>
+
+            <!-- Link de Mercado Pago (solo si tipo es 'mercadopago') -->
+            <div class="form-group" *ngIf="configuracionPagos.tipo_pago === 'mercadopago'">
+              <label for="linkMP">Link de Mercado Pago:</label>
+              <input
+                type="url"
+                id="linkMP"
+                [(ngModel)]="configuracionPagos.link_mercadopago"
+                name="linkMP"
+                class="form-control"
+                placeholder="Ej: https://mpago.la/tu-link"
+                required>
+              <small class="form-help">Este link se mostrará a los clientes para que paguen directamente.</small>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="guardandoConfiguracion">
+                {{ guardandoConfiguracion ? 'Guardando...' : 'Guardar Cambios' }}
+              </button>
+            </div>
+          </form>
+
+          <div class="preview-section">
+            <h4>Vista previa:</h4>
+            <div class="preview-box">
+              <div *ngIf="configuracionPagos.tipo_pago === 'alias'">
+                <p><strong>Alias:</strong> {{ configuracionPagos.alias_transferencia || '(sin alias configurado)' }}</p>
+              </div>
+              <div *ngIf="configuracionPagos.tipo_pago === 'qr' && previewQR">
+                <p><strong>Código QR:</strong></p>
+                <img [src]="previewQR" alt="QR" class="preview-qr-image">
+              </div>
+              <div *ngIf="configuracionPagos.tipo_pago === 'mercadopago' && configuracionPagos.link_mercadopago" class="preview-mp-link">
+                <a [href]="configuracionPagos.link_mercadopago" target="_blank" class="btn-mercadopago">
+                  💳 Pagar con Mercado Pago
+                </a>
+              </div>
+              <p class="preview-mensaje" *ngIf="configuracionPagos.tipo_pago !== 'mercadopago'">{{ configuracionPagos.mensaje_transferencia || '(sin mensaje configurado)' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </main>
