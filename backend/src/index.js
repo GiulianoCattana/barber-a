@@ -32,11 +32,6 @@ app.use(express.urlencoded({ extended: true }));
 // Servir archivos estáticos desde el directorio uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Servir frontend en producción
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../frontend/dist/frontend/browser')));
-}
-
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/turnos', turnosRoutes);
@@ -55,13 +50,6 @@ app.use('/api/webhook', webhookRoutes);
 app.get('/api', (req, res) => {
   res.json({ mensaje: 'API de Peluquería funcionando correctamente' });
 });
-
-// Servir index.html para todas las rutas en producción (para Angular routing)
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/dist/frontend/browser/index.html'));
-  });
-}
 
 // Iniciar servidor
 app.listen(PORT, () => {
