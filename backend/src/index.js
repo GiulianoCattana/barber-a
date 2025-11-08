@@ -21,7 +21,23 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || '*',
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
+
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'https://barber-a-1.onrender.com',
+      'http://localhost:4200'
+    ];
+
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(null, true); // En producción, cambiar a: callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
