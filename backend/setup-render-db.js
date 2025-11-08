@@ -1,11 +1,8 @@
 const { Client } = require('pg');
 
+// Usar DATABASE_URL si está disponible, sino usar credenciales individuales
 const client = new Client({
-  host: 'dpg-d46kgj0dl3ps73bp02o0-a.oregon-postgres.render.com',
-  port: 5432,
-  database: 'peluqueria_db_5hwu',
-  user: 'peluqueria_db_5hwu_user',
-  password: 'lJE1qtz0s05mu5GIZ08px8a6sH741GaB',
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
   }
