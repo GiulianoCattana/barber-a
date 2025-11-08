@@ -21,36 +21,31 @@ const registro = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear el usuario con email_verificado en false
+    // Crear el usuario con email_verificado en TRUE (sin verificación por ahora)
     const nuevoUsuario = await pool.query(
       'INSERT INTO usuarios (nombre, email, password, telefono, rol, email_verificado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nombre, email, telefono, rol',
-      [nombre, email, passwordHash, telefono, 'cliente', false]
+      [nombre, email, passwordHash, telefono, 'cliente', true]
     );
 
     const usuario = nuevoUsuario.rows[0];
 
-    // Enviar código de verificación por email
-    try {
-      await enviarEmailVerificacion(email, nombre);
-    } catch (emailError) {
-      console.error('Error al enviar email de verificación:', emailError);
-      // Eliminar el usuario si no se pudo enviar el email
-      await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
-      return res.status(500).json({
-        mensaje: 'No se pudo enviar el email de verificación. Por favor verifica tu dirección de email.'
-      });
-    }
+    // Crear token JWT
+    const token = jwt.sign(
+      { id: usuario.id, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
 
     res.status(201).json({
-      mensaje: 'Usuario registrado. Por favor verifica tu email para activar tu cuenta.',
+      mensaje: 'Usuario registrado exitosamente',
+      token,
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
         telefono: usuario.telefono,
         rol: usuario.rol
-      },
-      requiresVerification: true
+      }
     });
   } catch (error) {
     console.error(error);
