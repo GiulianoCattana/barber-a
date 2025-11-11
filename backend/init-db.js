@@ -77,8 +77,11 @@ async function initDatabase() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS configuracion_pagos (
         id SERIAL PRIMARY KEY,
-        tipo_pago VARCHAR(50) NOT NULL,
-        link_pago TEXT,
+        alias_transferencia VARCHAR(100),
+        mensaje_transferencia TEXT,
+        tipo_pago VARCHAR(50),
+        imagen_qr VARCHAR(500),
+        link_mercadopago TEXT,
         activo BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW()
       )
@@ -160,12 +163,16 @@ async function initDatabase() {
     console.log('✅ Tabla home_servicios');
 
     // Insertar configuración de pagos si no existe
-    await client.query(`
-      INSERT INTO configuracion_pagos (tipo_pago, link_pago, activo)
-      VALUES ('mercadopago', 'https://mpago.la/2Cf9bkf', true)
-      ON CONFLICT DO NOTHING
-    `);
-    console.log('✅ Configuración de pagos insertada');
+    const configCheck = await client.query('SELECT id FROM configuracion_pagos LIMIT 1');
+    if (configCheck.rows.length === 0) {
+      await client.query(`
+        INSERT INTO configuracion_pagos (tipo_pago, link_mercadopago, activo)
+        VALUES ('mercadopago', 'https://mpago.la/2Cf9bkf', true)
+      `);
+      console.log('✅ Configuración de pagos insertada');
+    } else {
+      console.log('✅ Configuración de pagos ya existe');
+    }
 
     // Verificar si existe admin
     const adminCheck = await client.query(`SELECT id FROM usuarios WHERE email = 'wonderbarber2025@gmail.com'`);
