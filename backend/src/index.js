@@ -27,7 +27,6 @@ const corsOptions = {
 
     // Lista de orígenes permitidos
     const allowedOrigins = [
-      process.env.FRONTEND_URL,
       'https://barber-a-1.onrender.com',
       'http://localhost:4200'
     ];
