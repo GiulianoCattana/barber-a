@@ -84,16 +84,17 @@ if (!fs.existsSync(frontendPath)) {
   }
 }
 
-// Middleware para SPA - ANTES de static files
-app.use((req, res, next) => {
-  // Si la petición es para API o para un archivo estático, continuar
-  if (req.path.startsWith('/api/') ||
-      req.path.startsWith('/uploads/') ||
-      req.path.match(/\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+// Archivos estáticos (JS, CSS, imágenes) - PRIMERO
+app.use(express.static(frontendPath, { index: false }));
+
+// SPA catch-all - DESPUÉS
+app.get('*', (req, res, next) => {
+  // Si es API, dejar que siga (404)
+  if (req.path.startsWith('/api/')) {
     return next();
   }
 
-  // Para todo lo demás (rutas de Angular), servir index.html
+  // Para todo lo demás, servir index.html
   const indexPath = path.join(frontendPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
@@ -101,9 +102,6 @@ app.use((req, res, next) => {
     res.status(500).send('Frontend not built. Please run build script.');
   }
 });
-
-// Archivos estáticos (JS, CSS, imágenes)
-app.use(express.static(frontendPath));
 
 // Iniciar servidor
 app.listen(PORT, () => {
