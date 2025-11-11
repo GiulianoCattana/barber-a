@@ -49,3 +49,7 @@ logs/
 **/limpiar-*.js
 **/configurar-*.js
 test-*.js
+
+# Scripts de mantenimiento con datos sensibles
+backend/fix-all-tables.js
+backend/reset-admin-password.js
