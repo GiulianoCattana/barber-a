@@ -69,15 +69,37 @@ app.get('/api', (req, res) => {
 
 // Servir archivos estáticos del frontend (Angular build)
 const frontendPath = path.join(__dirname, '../../frontend/dist/frontend/browser');
+const fs = require('fs');
+
+// Verificar que el frontend existe
+if (!fs.existsSync(frontendPath)) {
+  console.error(`❌ ERROR: Frontend path not found: ${frontendPath}`);
+  console.error('Make sure to run the build script first');
+} else {
+  console.log(`✅ Frontend path found: ${frontendPath}`);
+  const indexPath = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    console.log(`✅ index.html found`);
+  } else {
+    console.error(`❌ ERROR: index.html not found at ${indexPath}`);
+  }
+}
+
 app.use(express.static(frontendPath));
 
 // Todas las rutas no API deben servir el index.html de Angular
 app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  const indexPath = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(500).send('Frontend not built. Please run build script.');
+  }
 });
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-  console.log(`Sirviendo frontend desde: ${frontendPath}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
+  console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 });
