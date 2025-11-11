@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://barber-a-1.onrender.com/api'
+  apiUrl: 'https://barber-backend-k3h8fes7d-giulianos-projects-5c6a13a8.vercel.app/api'
 };
