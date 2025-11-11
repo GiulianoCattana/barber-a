@@ -67,7 +67,17 @@ app.get('/api', (req, res) => {
   res.json({ mensaje: 'API de Peluquería funcionando correctamente' });
 });
 
+// Servir archivos estáticos del frontend (Angular build)
+const frontendPath = path.join(__dirname, '../../frontend/dist/frontend/browser');
+app.use(express.static(frontendPath));
+
+// Todas las rutas no API deben servir el index.html de Angular
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Sirviendo frontend desde: ${frontendPath}`);
 });
