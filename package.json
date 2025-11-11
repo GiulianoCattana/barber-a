@@ -1,0 +1,13 @@
+{
+  "name": "peluqueria-fullstack",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de peluquería - Frontend y Backend",
+  "scripts": {
+    "build": "bash build.sh",
+    "start": "cd backend && node src/index.js",
+    "install": "echo 'Installing dependencies...' && cd frontend && npm ci --legacy-peer-deps && cd ../backend && npm ci --legacy-peer-deps"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
