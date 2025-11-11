@@ -69,33 +69,20 @@ app.get('/api', (req, res) => {
 // Servir archivos estáticos del frontend (Angular build)
 const fs = require('fs');
 
-// Intentar diferentes rutas posibles para el frontend
-const possiblePaths = [
-  path.join(__dirname, '../../frontend/dist/frontend/browser'),     // Local
-  path.join(__dirname, '../../../frontend/dist/frontend/browser'),  // Render opción 1
-  path.join(__dirname, '../../../../frontend/dist/frontend/browser'), // Render opción 2
-  '/opt/render/project/frontend/dist/frontend/browser',              // Render absoluto
-];
+// En producción (Render), el frontend está en backend/public/
+// En desarrollo local, está en frontend/dist/frontend/browser
+const frontendPath = path.join(__dirname, '../public');
+const localFrontendPath = path.join(__dirname, '../../frontend/dist/frontend/browser');
 
-let frontendPath = null;
-for (const testPath of possiblePaths) {
-  if (fs.existsSync(testPath)) {
-    frontendPath = testPath;
-    console.log(`✅ Frontend encontrado en: ${frontendPath}`);
-    break;
-  }
+let finalPath = frontendPath;
+if (!fs.existsSync(frontendPath) && fs.existsSync(localFrontendPath)) {
+  finalPath = localFrontendPath;
 }
 
-if (!frontendPath) {
-  console.error(`❌ ERROR: No se encontró el frontend en ninguna ruta`);
-  console.error(`Rutas probadas:`);
-  possiblePaths.forEach(p => console.error(`  - ${p}`));
-  console.error(`__dirname actual: ${__dirname}`);
-  frontendPath = possiblePaths[0]; // Usar la primera por defecto
-}
+console.log(`📁 Usando frontend desde: ${finalPath}`);
 
 // Archivos estáticos (JS, CSS, imágenes) - PRIMERO
-app.use(express.static(frontendPath, { index: false }));
+app.use(express.static(finalPath, { index: false }));
 
 // SPA catch-all - DESPUÉS
 app.get('*', (req, res, next) => {
@@ -105,7 +92,7 @@ app.get('*', (req, res, next) => {
   }
 
   // Para todo lo demás, servir index.html
-  const indexPath = path.join(frontendPath, 'index.html');
+  const indexPath = path.join(finalPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
@@ -116,6 +103,6 @@ app.get('*', (req, res, next) => {
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
+  console.log(`📁 Sirviendo frontend desde: ${finalPath}`);
   console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 });

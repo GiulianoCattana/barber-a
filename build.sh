@@ -21,6 +21,11 @@ echo "📦 Installing backend dependencies..."
 cd ../backend
 npm ci --legacy-peer-deps
 
+echo "📂 Copiando frontend al backend..."
+mkdir -p public
+cp -r ../frontend/dist/frontend/browser/* public/
+echo "✅ Frontend copiado a backend/public/"
+
 echo "🗄️ Initializing database..."
 if [ -n "$DATABASE_URL" ]; then
   node init-db.js || echo "⚠️  Warning: Database initialization failed (will retry on start)"
