@@ -67,21 +67,31 @@ app.get('/api', (req, res) => {
 });
 
 // Servir archivos estáticos del frontend (Angular build)
-const frontendPath = path.join(__dirname, '../../frontend/dist/frontend/browser');
 const fs = require('fs');
 
-// Verificar que el frontend existe
-if (!fs.existsSync(frontendPath)) {
-  console.error(`❌ ERROR: Frontend path not found: ${frontendPath}`);
-  console.error('Make sure to run the build script first');
-} else {
-  console.log(`✅ Frontend path found: ${frontendPath}`);
-  const indexPath = path.join(frontendPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    console.log(`✅ index.html found`);
-  } else {
-    console.error(`❌ ERROR: index.html not found at ${indexPath}`);
+// Intentar diferentes rutas posibles para el frontend
+const possiblePaths = [
+  path.join(__dirname, '../../frontend/dist/frontend/browser'),     // Local
+  path.join(__dirname, '../../../frontend/dist/frontend/browser'),  // Render opción 1
+  path.join(__dirname, '../../../../frontend/dist/frontend/browser'), // Render opción 2
+  '/opt/render/project/frontend/dist/frontend/browser',              // Render absoluto
+];
+
+let frontendPath = null;
+for (const testPath of possiblePaths) {
+  if (fs.existsSync(testPath)) {
+    frontendPath = testPath;
+    console.log(`✅ Frontend encontrado en: ${frontendPath}`);
+    break;
   }
+}
+
+if (!frontendPath) {
+  console.error(`❌ ERROR: No se encontró el frontend en ninguna ruta`);
+  console.error(`Rutas probadas:`);
+  possiblePaths.forEach(p => console.error(`  - ${p}`));
+  console.error(`__dirname actual: ${__dirname}`);
+  frontendPath = possiblePaths[0]; // Usar la primera por defecto
 }
 
 // Archivos estáticos (JS, CSS, imágenes) - PRIMERO
