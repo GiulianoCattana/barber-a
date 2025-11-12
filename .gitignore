@@ -14,7 +14,7 @@ frontend/.env
 # Build outputs
 frontend/dist/
 frontend/.angular/
-backend/public/
+# backend/public/ - INCLUIDO en git para despliegue
 
 # Backend uploads (mantener estructura, ignorar contenido)
 backend/uploads/*
