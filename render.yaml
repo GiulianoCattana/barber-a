@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: barber-a
+    name: wonderbarberia
     runtime: node
     region: oregon
     plan: free

@@ -62,7 +62,7 @@ EMAIL_PASSWORD=tu_app_password_de_gmail
 MP_ACCESS_TOKEN=tu_access_token_de_mp
 
 # Frontend URL
-FRONTEND_URL=https://tu-app.onrender.com
+FRONTEND_URL=https://wonderbarberia.onrender.com
 
 # Node
 NODE_ENV=production
@@ -107,7 +107,7 @@ PORT=3000
    ```
 4. Environment Variables:
    ```
-   API_URL=https://tu-backend.onrender.com/api
+   API_URL=https://wonderbarberia.onrender.com/api
    ```
 5. Creá el sitio
 
@@ -132,11 +132,11 @@ node crear-sistema-suscripciones.js
 
 Una vez desplegado:
 
-1. Copiá la URL de tu backend: `https://tu-backend.onrender.com`
+1. Copiá la URL de tu backend: `https://wonderbarberia.onrender.com`
 2. Entrá a Mercado Pago → Configuración → Webhooks
 3. Creá nuevo webhook:
    ```
-   URL: https://tu-backend.onrender.com/api/webhook/mercadopago
+   URL: https://wonderbarberia.onrender.com/api/webhook/mercadopago
    Evento: Pagos ✓
    ```
 4. Guardá
@@ -224,7 +224,7 @@ Enviá esto al admin que va a usar el sistema:
 
 ## Primer Acceso
 
-1. Entrá a: https://tu-app.onrender.com
+1. Entrá a: https://wonderbarberia.onrender.com
 2. Email: [tu-email]
 3. Password: [tu-password]
 

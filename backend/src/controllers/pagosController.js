@@ -6,7 +6,7 @@ const path = require('path');
 const obtenerConfiguracion = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT tipo_pago, link_pago, activo FROM configuracion_pagos ORDER BY id DESC LIMIT 1'
+      'SELECT tipo_pago, link_mercadopago, activo FROM configuracion_pagos ORDER BY id DESC LIMIT 1'
     );
 
     if (result.rows.length === 0) {
@@ -23,12 +23,9 @@ const obtenerConfiguracion = async (req, res) => {
 // Actualizar configuración de pagos (solo admin)
 const actualizarConfiguracion = async (req, res) => {
   try {
-    const { tipo_pago, link_pago, link_mercadopago } = req.body;
+    const { tipo_pago, link_mercadopago } = req.body;
 
-    // Usar link_mercadopago si viene, si no usar link_pago para retrocompatibilidad
-    const linkPago = link_mercadopago || link_pago;
-
-    console.log('Datos recibidos:', { tipo_pago, link_pago: linkPago });
+    console.log('Datos recibidos:', { tipo_pago, link_mercadopago });
 
     if (!tipo_pago) {
       return res.status(400).json({ mensaje: 'El tipo de pago es requerido' });
@@ -37,18 +34,18 @@ const actualizarConfiguracion = async (req, res) => {
     const result = await pool.query(
       `UPDATE configuracion_pagos
        SET tipo_pago = $1,
-           link_pago = $2,
+           link_mercadopago = $2,
            activo = true
        WHERE id = 1
        RETURNING *`,
-      [tipo_pago, linkPago || null]
+      [tipo_pago, link_mercadopago || null]
     );
 
     if (result.rows.length === 0) {
       // Si no existe, crear uno nuevo
       const insertResult = await pool.query(
-        'INSERT INTO configuracion_pagos (tipo_pago, link_pago, activo) VALUES ($1, $2, true) RETURNING *',
-        [tipo_pago, linkPago || null]
+        'INSERT INTO configuracion_pagos (tipo_pago, link_mercadopago, activo) VALUES ($1, $2, true) RETURNING *',
+        [tipo_pago, link_mercadopago || null]
       );
       return res.json({
         mensaje: 'Configuración creada correctamente',

@@ -16,8 +16,8 @@
 1. Ve a https://dashboard.render.com
 2. Click en "New +" → "PostgreSQL"
 3. Configura:
-   - **Name**: `peluqueria-db`
-   - **Database**: `peluqueria_db`
+   - **Name**: `wonderbarberia-db`
+   - **Database**: `wonderbarberia_db`
    - **User**: (se genera automáticamente)
    - **Region**: Ohio (US East)
    - **Plan**: Free
@@ -39,7 +39,7 @@ node setup-render-db.js
 1. Click en "New +" → "Web Service"
 2. Conecta tu repositorio de GitHub
 3. Configura:
-   - **Name**: `peluqueria-app`
+   - **Name**: `wonderbarberia`
    - **Region**: Ohio (US East)
    - **Branch**: `main`
    - **Root Directory**: (dejar vacío)
@@ -81,7 +81,7 @@ Para Gmail, necesitas crear una "Contraseña de Aplicación":
 
 Una vez completado, tu aplicación estará disponible en:
 ```
-https://peluqueria-app.onrender.com
+https://wonderbarberia.onrender.com
 ```
 
 Prueba:
@@ -132,7 +132,7 @@ Si la app no carga:
 
 Tu aplicación de peluquería está ahora en producción y lista para usarse.
 
-**URL de producción**: https://peluqueria-app.onrender.com
+**URL de producción**: https://wonderbarberia.onrender.com
 
 ---
 

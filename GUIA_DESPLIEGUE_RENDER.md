@@ -201,7 +201,7 @@ En la sección **"Environment Variables"**, agrega las siguientes variables (cli
 | `DB_USER` | (copia el user de Render) |
 | `DB_PASSWORD` | (copia el password de Render) |
 | `JWT_SECRET` | `genera_una_cadena_aleatoria_de_minimo_32_caracteres_aqui_12345678` |
-| `FRONTEND_URL` | `https://peluqueria-wonderbarber.onrender.com` (reemplaza con tu URL de Render) |
+| `FRONTEND_URL` | `https://wonderbarberia.onrender.com` |
 | `EMAIL_USER` | `wonderbarber2025@gmail.com` |
 | `EMAIL_PASSWORD` | `tkrmdefmjvjzolpj` |
 
@@ -251,7 +251,7 @@ SELECT id, nombre, email, rol FROM usuarios WHERE rol = 'admin';
 
 En tu dashboard de Render, verás la URL de tu aplicación:
 ```
-https://peluqueria-wonderbarber.onrender.com
+https://wonderbarberia.onrender.com
 ```
 
 ### 5.2 Hacer login
@@ -322,7 +322,7 @@ La primera vez que accedas a tu aplicación en Render:
 
 Tu aplicación ahora está en internet y accesible desde cualquier lugar.
 
-**Tu URL**: `https://peluqueria-wonderbarber.onrender.com`
+**Tu URL**: `https://wonderbarberia.onrender.com`
 
 ### Próximos Pasos Opcionales
 

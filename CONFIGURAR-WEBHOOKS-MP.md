@@ -26,12 +26,12 @@ Para que la suscripción se active **automáticamente** al recibir el pago, nece
 
 ```
 Nombre: Suscripciones WonderBarber
-URL de producción: https://TU-DOMINIO.onrender.com/api/webhook/mercadopago
+URL de producción: https://wonderbarberia.onrender.com/api/webhook/mercadopago
 Eventos: ✓ Pagos (payments)
 ```
 
 **⚠️ IMPORTANTE**:
-- Reemplazá `TU-DOMINIO` por tu dominio real de Render
+- Esta es tu URL de producción: https://wonderbarberia.onrender.com
 - Si todavía no desplegaste en Render, usá ngrok (ver más abajo)
 
 3. Guardá la configuración
@@ -138,17 +138,17 @@ Si el email no coincide o el webhook falla:
 
 ## 🚀 En Producción (Render)
 
-Cuando despliegues en Render, tu URL será automática:
+Tu URL de producción en Render será:
 
 ```
-https://tu-app-nombre.onrender.com/api/webhook/mercadopago
+https://wonderbarberia.onrender.com/api/webhook/mercadopago
 ```
 
 **Pasos**:
 1. Desplegá tu app en Render
-2. Copiá la URL de tu app
-3. Agregá `/api/webhook/mercadopago` al final
-4. Configurá esa URL en Mercado Pago
+2. Tu URL ya está configurada: https://wonderbarberia.onrender.com
+3. La ruta del webhook es: `/api/webhook/mercadopago`
+4. Configurá esa URL completa en Mercado Pago
 5. ¡Listo! Funciona automáticamente
 
 ---

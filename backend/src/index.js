@@ -27,7 +27,7 @@ const corsOptions = {
 
     // Lista de orígenes permitidos
     const allowedOrigins = [
-      'https://barber-a-1.onrender.com',
+      'https://wonderbarberia.onrender.com',
       'http://localhost:4200'
     ];
 
