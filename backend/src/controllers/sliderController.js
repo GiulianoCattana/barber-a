@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
 
 // Configuración de multer para subir imágenes
 const storage = multer.diskStorage({
@@ -70,19 +71,37 @@ const subirImagen = async (req, res) => {
       return res.status(400).json({ mensaje: 'No se proporcionó ninguna imagen' });
     }
 
-    const imagenUrl = `/uploads/slider/${req.file.filename}`;
+    // Subir imagen a Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'wonderbarber/slider',
+      resource_type: 'auto'
+    });
+
+    const imagenUrl = result.secure_url;
+
+    // Eliminar archivo temporal
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
     const altText = req.body.alt_text || '';
     const orden = req.body.orden || 0;
 
-    const result = await pool.query(
-      'INSERT INTO slider_imagenes (imagen_url, alt_text, orden) VALUES ($1, $2, $3) RETURNING *',
-      [imagenUrl, altText, orden]
+    const dbResult = await pool.query(
+      'INSERT INTO slider_imagenes (imagen_url, orden) VALUES ($1, $2) RETURNING *',
+      [imagenUrl, orden]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(dbResult.rows[0]);
   } catch (error) {
     console.error('Error al subir imagen:', error);
-    res.status(500).json({ mensaje: 'Error al subir imagen' });
+
+    // Eliminar archivo temporal si hubo error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({ mensaje: 'Error al subir imagen: ' + error.message });
   }
 };
 
@@ -125,18 +144,23 @@ const eliminarImagenSlider = async (req, res) => {
     // Eliminar de la base de datos
     await pool.query('DELETE FROM slider_imagenes WHERE id = $1', [id]);
 
-    // Intentar eliminar el archivo físico si es una imagen subida
-    if (imagenUrl.startsWith('/uploads/')) {
-      const filePath = path.join(__dirname, '../../', imagenUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    // Eliminar imagen de Cloudinary
+    if (imagenUrl.includes('cloudinary.com')) {
+      const parts = imagenUrl.split('/');
+      const filename = parts[parts.length - 1];
+      const publicId = 'wonderbarber/slider/' + filename.split('.')[0];
+
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error('Error al eliminar imagen de Cloudinary:', err);
       }
     }
 
     res.json({ mensaje: 'Imagen eliminada correctamente' });
   } catch (error) {
     console.error('Error al eliminar imagen del slider:', error);
-    res.status(500).json({ mensaje: 'Error al eliminar imagen del slider' });
+    res.status(500).json({ mensaje: 'Error al eliminar imagen del slider: ' + error.message });
   }
 };
 
