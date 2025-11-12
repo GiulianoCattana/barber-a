@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: barber-a
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd backend && npm install --legacy-peer-deps
+    startCommand: cd backend && node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
