@@ -7,7 +7,7 @@ export interface ItemGaleria {
   id?: number;
   titulo: string;
   descripcion: string;
-  url_imagen: string;
+  imagen_url: string;
   created_at?: string;
 }
 

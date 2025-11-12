@@ -25,7 +25,7 @@ export class GaleriaComponent implements OnInit {
   itemActual: ItemGaleria = {
     titulo: '',
     descripcion: '',
-    url_imagen: ''
+    imagen_url: ''
   };
   archivoSeleccionado: File | null = null;
   mensaje: string = '';
@@ -93,7 +93,7 @@ export class GaleriaComponent implements OnInit {
     this.itemActual = {
       titulo: '',
       descripcion: '',
-      url_imagen: ''
+      imagen_url: ''
     };
     this.archivoSeleccionado = null;
   }
@@ -184,7 +184,7 @@ export class GaleriaComponent implements OnInit {
     this.itemActual = {
       titulo: '',
       descripcion: '',
-      url_imagen: ''
+      imagen_url: ''
     };
     this.archivoSeleccionado = null;
   }
