@@ -20,25 +20,25 @@ const obtenerItems = async (req, res) => {
 // Crear un nuevo item de galería
 const crearItem = async (req, res) => {
   try {
-    const { titulo, descripcion } = req.body;
+    const { titulo } = req.body;
 
-    if (!titulo || !descripcion) {
-      return res.status(400).json({ mensaje: 'Título y descripción son requeridos' });
+    if (!titulo) {
+      return res.status(400).json({ mensaje: 'Título es requerido' });
     }
 
     if (!req.file) {
       return res.status(400).json({ mensaje: 'La imagen es requerida' });
     }
 
-    const urlImagen = '/uploads/' + req.file.filename;
+    const imagenUrl = '/uploads/' + req.file.filename;
 
     const query = `
-      INSERT INTO galeria (titulo, descripcion, url_imagen)
-      VALUES ($1, $2, $3)
+      INSERT INTO galeria (titulo, imagen_url)
+      VALUES ($1, $2)
       RETURNING *
     `;
 
-    const resultado = await pool.query(query, [titulo, descripcion, urlImagen]);
+    const resultado = await pool.query(query, [titulo, imagenUrl]);
 
     res.status(201).json({
       mensaje: 'Item creado exitosamente',
@@ -63,10 +63,10 @@ const crearItem = async (req, res) => {
 const actualizarItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { titulo, descripcion } = req.body;
+    const { titulo } = req.body;
 
-    if (!titulo || !descripcion) {
-      return res.status(400).json({ mensaje: 'Título y descripción son requeridos' });
+    if (!titulo) {
+      return res.status(400).json({ mensaje: 'Título es requerido' });
     }
 
     let query;
@@ -74,11 +74,11 @@ const actualizarItem = async (req, res) => {
 
     if (req.file) {
       // Si hay nueva imagen, eliminar la anterior
-      const itemAnterior = await pool.query('SELECT url_imagen FROM galeria WHERE id = $1', [id]);
+      const itemAnterior = await pool.query('SELECT imagen_url FROM galeria WHERE id = $1', [id]);
 
       if (itemAnterior.rows.length > 0) {
-        const urlImagenAnterior = itemAnterior.rows[0].url_imagen;
-        const nombreArchivo = urlImagenAnterior.replace('/uploads/', '');
+        const imagenUrlAnterior = itemAnterior.rows[0].imagen_url;
+        const nombreArchivo = imagenUrlAnterior.replace('/uploads/', '');
         const filePath = path.join(__dirname, '../../uploads', nombreArchivo);
 
         if (fs.existsSync(filePath)) {
@@ -86,12 +86,12 @@ const actualizarItem = async (req, res) => {
         }
       }
 
-      const urlImagen = '/uploads/' + req.file.filename;
-      query = 'UPDATE galeria SET titulo = $1, descripcion = $2, url_imagen = $3 WHERE id = $4 RETURNING *';
-      params = [titulo, descripcion, urlImagen, id];
+      const imagenUrl = '/uploads/' + req.file.filename;
+      query = 'UPDATE galeria SET titulo = $1, imagen_url = $2 WHERE id = $3 RETURNING *';
+      params = [titulo, imagenUrl, id];
     } else {
-      query = 'UPDATE galeria SET titulo = $1, descripcion = $2 WHERE id = $3 RETURNING *';
-      params = [titulo, descripcion, id];
+      query = 'UPDATE galeria SET titulo = $1 WHERE id = $2 RETURNING *';
+      params = [titulo, id];
     }
 
     const resultado = await pool.query(query, params);
@@ -125,19 +125,19 @@ const eliminarItem = async (req, res) => {
     const { id } = req.params;
 
     // Obtener la URL de la imagen antes de eliminar
-    const itemQuery = await pool.query('SELECT url_imagen FROM galeria WHERE id = $1', [id]);
+    const itemQuery = await pool.query('SELECT imagen_url FROM galeria WHERE id = $1', [id]);
 
     if (itemQuery.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Item no encontrado' });
     }
 
-    const urlImagen = itemQuery.rows[0].url_imagen;
+    const imagenUrl = itemQuery.rows[0].imagen_url;
 
     // Eliminar el registro de la base de datos
     await pool.query('DELETE FROM galeria WHERE id = $1', [id]);
 
     // Eliminar el archivo del servidor
-    const nombreArchivo = urlImagen.replace('/uploads/', '');
+    const nombreArchivo = imagenUrl.replace('/uploads/', '');
     const filePath = path.join(__dirname, '../../uploads', nombreArchivo);
 
     if (fs.existsSync(filePath)) {
