@@ -117,6 +117,9 @@ app.get('*', (req, res, next) => {
 
     const addEsReservableToServicios = require('./migrations/addEsReservableToServicios');
     await addEsReservableToServicios();
+
+    const addDuracionMinutosToTurnos = require('./migrations/addDuracionMinutosToTurnos');
+    await addDuracionMinutosToTurnos();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
