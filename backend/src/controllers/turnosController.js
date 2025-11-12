@@ -143,13 +143,18 @@ const obtenerTurnosDisponibles = async (req, res) => {
     // Si es el día de hoy, filtrar horarios que ya pasaron
     const [year, month, day] = fecha.split('-').map(Number);
     const fechaSeleccionada = new Date(year, month - 1, day);
-    const hoy = new Date();
+
+    // Usar la hora de Argentina (UTC-3)
+    const ahora = new Date();
+    const horaArgentina = new Date(ahora.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+    const hoy = new Date(horaArgentina);
     hoy.setHours(0, 0, 0, 0);
 
     if (fechaSeleccionada.getTime() === hoy.getTime()) {
-      const ahora = new Date();
-      const horaActual = ahora.getHours();
-      const minutosActuales = ahora.getMinutes();
+      const horaActual = horaArgentina.getHours();
+      const minutosActuales = horaArgentina.getMinutes();
+
+      console.log(`⏰ Hora actual Argentina: ${horaActual}:${minutosActuales}`);
 
       horariosDisponibles = horariosDisponibles.filter(hora => {
         const [horas, minutos] = hora.split(':').map(Number);
