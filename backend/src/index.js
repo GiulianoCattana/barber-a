@@ -108,6 +108,9 @@ app.get('*', (req, res, next) => {
 
     const createDiasBloqueadosTable = require('./migrations/createDiasBloqueadosTable');
     await createDiasBloqueadosTable();
+
+    const createHorariosBloqueadosTable = require('./migrations/createHorariosBloqueadosTable');
+    await createHorariosBloqueadosTable();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
