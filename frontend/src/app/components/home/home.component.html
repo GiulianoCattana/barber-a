@@ -67,7 +67,7 @@
       <div *ngIf="items.length > 0" class="galeria-grid">
         <div *ngFor="let item of items" class="galeria-item">
           <div class="galeria-imagen">
-            <img [src]="getImageUrl(item.url_imagen)" [alt]="item.titulo">
+            <img [src]="getImageUrl(item.imagen_url)" [alt]="item.titulo">
           </div>
           <div class="galeria-info">
             <h3>{{ item.titulo }}</h3>
