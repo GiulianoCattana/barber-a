@@ -21,32 +21,58 @@ const registro = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear el usuario SIN verificar (email_verificado = FALSE)
+    // SOLO clientes necesitan verificar email
+    // Admin se crea verificado automáticamente
+    const esCliente = true; // Siempre es cliente cuando se registra desde el frontend
+    const emailVerificado = !esCliente; // Si no es cliente (admin), ya está verificado
+
+    // Crear el usuario
     const nuevoUsuario = await pool.query(
       'INSERT INTO usuarios (nombre, email, password, telefono, rol, email_verificado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nombre, email, telefono, rol',
-      [nombre, email, passwordHash, telefono, 'cliente', false]
+      [nombre, email, passwordHash, telefono, 'cliente', emailVerificado]
     );
 
     const usuario = nuevoUsuario.rows[0];
 
-    // Enviar código de verificación por email
-    try {
-      await enviarEmailVerificacion(email, nombre);
-      console.log(`✅ Código de verificación enviado a ${email}`);
-    } catch (emailError) {
-      console.error('Error al enviar email:', emailError);
-      // Eliminar el usuario si falla el envío del email
-      await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
-      return res.status(500).json({
-        mensaje: 'Error al enviar el código de verificación. Por favor intenta nuevamente.'
+    // Si es cliente, enviar código de verificación
+    if (esCliente) {
+      try {
+        await enviarEmailVerificacion(email, nombre);
+        console.log(`✅ Código de verificación enviado a ${email}`);
+      } catch (emailError) {
+        console.error('Error al enviar email:', emailError);
+        // Eliminar el usuario si falla el envío del email
+        await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
+        return res.status(500).json({
+          mensaje: 'Error al enviar el código de verificación. Por favor intenta nuevamente.'
+        });
+      }
+
+      // NO devolver token, solo confirmar que debe verificar email
+      return res.status(201).json({
+        mensaje: '¡Registro exitoso! Revisa tu email para verificar tu cuenta.',
+        requiresVerification: true,
+        email: usuario.email
       });
     }
 
-    // NO devolver token, solo confirmar que debe verificar email
+    // Si es admin (esto no debería pasar en registro público, pero por si acaso)
+    const token = jwt.sign(
+      { id: usuario.id, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
     res.status(201).json({
-      mensaje: '¡Registro exitoso! Revisa tu email para verificar tu cuenta.',
-      requiresVerification: true,
-      email: usuario.email
+      mensaje: 'Usuario registrado exitosamente',
+      token,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        telefono: usuario.telefono,
+        rol: usuario.rol
+      }
     });
   } catch (error) {
     console.error(error);
@@ -77,8 +103,8 @@ const login = async (req, res) => {
       return res.status(401).json({ mensaje: 'Credenciales inválidas' });
     }
 
-    // Verificar si el email está verificado
-    if (!usuario.email_verificado) {
+    // Verificar si el email está verificado (SOLO para clientes)
+    if (usuario.rol === 'cliente' && !usuario.email_verificado) {
       return res.status(403).json({
         mensaje: 'Por favor verifica tu email antes de iniciar sesión',
         requiresVerification: true,
