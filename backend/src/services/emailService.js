@@ -1,21 +1,21 @@
 const nodemailer = require('nodemailer');
 
 // Configuración del transportador de email con configuración robusta para Gmail
+// Usando puerto 465 (SSL) en lugar de 587 (STARTTLS) por posibles restricciones en Render
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  port: 465,
+  secure: true, // true para puerto 465
   auth: {
     user: process.env.EMAIL_USER || 'tu-email@gmail.com',
     pass: process.env.EMAIL_PASSWORD || 'tu-contraseña-de-aplicacion'
   },
   tls: {
-    rejectUnauthorized: false,
-    ciphers: 'SSLv3'
+    rejectUnauthorized: false
   },
-  connectionTimeout: 10000, // 10 segundos
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  connectionTimeout: 15000, // 15 segundos
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
   debug: true, // Mostrar logs de debug
   logger: true // Mostrar logs en consola
 });
