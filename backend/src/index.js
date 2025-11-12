@@ -126,6 +126,9 @@ app.get('*', (req, res, next) => {
 
     const addTransferenciaColumnsToConfiguracion = require('./migrations/addTransferenciaColumnsToConfiguracion');
     await addTransferenciaColumnsToConfiguracion();
+
+    const addCodigoVerificacionToUsuarios = require('./migrations/addCodigoVerificacionToUsuarios');
+    await addCodigoVerificacionToUsuarios();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }

@@ -21,31 +21,32 @@ const registro = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear el usuario con email_verificado en TRUE (sin verificación por ahora)
+    // Crear el usuario SIN verificar (email_verificado = FALSE)
     const nuevoUsuario = await pool.query(
       'INSERT INTO usuarios (nombre, email, password, telefono, rol, email_verificado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nombre, email, telefono, rol',
-      [nombre, email, passwordHash, telefono, 'cliente', true]
+      [nombre, email, passwordHash, telefono, 'cliente', false]
     );
 
     const usuario = nuevoUsuario.rows[0];
 
-    // Crear token JWT
-    const token = jwt.sign(
-      { id: usuario.id, rol: usuario.rol },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    // Enviar código de verificación por email
+    try {
+      await enviarEmailVerificacion(email, nombre);
+      console.log(`✅ Código de verificación enviado a ${email}`);
+    } catch (emailError) {
+      console.error('Error al enviar email:', emailError);
+      // Eliminar el usuario si falla el envío del email
+      await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
+      return res.status(500).json({
+        mensaje: 'Error al enviar el código de verificación. Por favor intenta nuevamente.'
+      });
+    }
 
+    // NO devolver token, solo confirmar que debe verificar email
     res.status(201).json({
-      mensaje: 'Usuario registrado exitosamente',
-      token,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        telefono: usuario.telefono,
-        rol: usuario.rol
-      }
+      mensaje: '¡Registro exitoso! Revisa tu email para verificar tu cuenta.',
+      requiresVerification: true,
+      email: usuario.email
     });
   } catch (error) {
     console.error(error);
