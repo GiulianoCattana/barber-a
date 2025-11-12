@@ -23,9 +23,12 @@ const obtenerConfiguracion = async (req, res) => {
 // Actualizar configuración de pagos (solo admin)
 const actualizarConfiguracion = async (req, res) => {
   try {
-    const { tipo_pago, link_pago } = req.body;
+    const { tipo_pago, link_pago, link_mercadopago } = req.body;
 
-    console.log('Datos recibidos:', { tipo_pago, link_pago });
+    // Usar link_mercadopago si viene, si no usar link_pago para retrocompatibilidad
+    const linkPago = link_mercadopago || link_pago;
+
+    console.log('Datos recibidos:', { tipo_pago, link_pago: linkPago });
 
     if (!tipo_pago) {
       return res.status(400).json({ mensaje: 'El tipo de pago es requerido' });
@@ -38,14 +41,14 @@ const actualizarConfiguracion = async (req, res) => {
            activo = true
        WHERE id = 1
        RETURNING *`,
-      [tipo_pago, link_pago || null]
+      [tipo_pago, linkPago || null]
     );
 
     if (result.rows.length === 0) {
       // Si no existe, crear uno nuevo
       const insertResult = await pool.query(
         'INSERT INTO configuracion_pagos (tipo_pago, link_pago, activo) VALUES ($1, $2, true) RETURNING *',
-        [tipo_pago, link_pago || null]
+        [tipo_pago, linkPago || null]
       );
       return res.json({
         mensaje: 'Configuración creada correctamente',
