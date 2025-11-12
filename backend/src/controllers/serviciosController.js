@@ -1,12 +1,12 @@
 const pool = require('../config/database');
 
-// Obtener todos los servicios activos
+// Obtener todos los servicios activos y reservables
 const obtenerServicios = async (req, res) => {
   try {
     const query = `
       SELECT id, nombre, descripcion, duracion, precio, activo
       FROM servicios
-      WHERE activo = true
+      WHERE activo = true AND es_reservable = true
       ORDER BY nombre
     `;
     const resultado = await pool.query(query);
@@ -17,12 +17,13 @@ const obtenerServicios = async (req, res) => {
   }
 };
 
-// Obtener todos los servicios (incluidos inactivos) - solo admin
+// Obtener todos los servicios reservables (incluidos inactivos) - solo admin
 const obtenerTodosServicios = async (req, res) => {
   try {
     const query = `
       SELECT id, nombre, descripcion, duracion, precio, activo, created_at, updated_at
       FROM servicios
+      WHERE es_reservable = true
       ORDER BY nombre
     `;
     const resultado = await pool.query(query);

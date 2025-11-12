@@ -26,10 +26,10 @@ const crearHomeServicio = async (req, res) => {
       return res.status(400).json({ mensaje: 'El nombre y descripción son requeridos' });
     }
 
-    // Primero crear el servicio en la tabla servicios
+    // Primero crear el servicio en la tabla servicios (no reservable, solo informativo)
     const servicioResult = await pool.query(
-      'INSERT INTO servicios (nombre, descripcion, duracion, precio, activo) VALUES ($1, $2, $3, $4, true) RETURNING id',
-      [nombre, descripcion, 30, 0] // Valores por defecto: 30 min duracion, $0 precio
+      'INSERT INTO servicios (nombre, descripcion, duracion, precio, activo, es_reservable) VALUES ($1, $2, $3, $4, true, false) RETURNING id',
+      [nombre, descripcion, 30, 0] // Valores por defecto: 30 min duracion, $0 precio, no reservable
     );
 
     const servicioId = servicioResult.rows[0].id;

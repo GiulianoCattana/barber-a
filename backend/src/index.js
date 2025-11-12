@@ -114,6 +114,9 @@ app.get('*', (req, res, next) => {
 
     const updateServiciosTable = require('./migrations/updateServiciosTable');
     await updateServiciosTable();
+
+    const addEsReservableToServicios = require('./migrations/addEsReservableToServicios');
+    await addEsReservableToServicios();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
