@@ -105,6 +105,9 @@ app.get('*', (req, res, next) => {
   try {
     const migrateGaleria = require('./migrations/renameGaleriaColumn');
     await migrateGaleria();
+
+    const createDiasBloqueadosTable = require('./migrations/createDiasBloqueadosTable');
+    await createDiasBloqueadosTable();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
