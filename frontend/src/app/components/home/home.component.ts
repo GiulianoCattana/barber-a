@@ -100,6 +100,12 @@ export class HomeComponent implements OnInit {
   }
 
   getImageUrl(url: string): string {
+    if (!url) return '';
+    // Si la URL ya es completa (http/https), devolverla tal cual
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // Si es una ruta relativa, agregar la URL del backend
     return this.backendUrl + url;
   }
 
