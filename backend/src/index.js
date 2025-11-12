@@ -123,6 +123,9 @@ app.get('*', (req, res, next) => {
 
     const addLinkMercadopagoToConfiguracion = require('./migrations/addLinkMercadopagoToConfiguracion');
     await addLinkMercadopagoToConfiguracion();
+
+    const addTransferenciaColumnsToConfiguracion = require('./migrations/addTransferenciaColumnsToConfiguracion');
+    await addTransferenciaColumnsToConfiguracion();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
