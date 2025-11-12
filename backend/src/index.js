@@ -101,8 +101,12 @@ app.get('*', (req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📁 Sirviendo frontend desde: ${finalPath}`);
   console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+
+  // Ejecutar migraciones
+  const renameGaleriaColumn = require('./migrations/renameGaleriaColumn');
+  await renameGaleriaColumn();
 });
