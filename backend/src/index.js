@@ -111,6 +111,9 @@ app.get('*', (req, res, next) => {
 
     const createHorariosBloqueadosTable = require('./migrations/createHorariosBloqueadosTable');
     await createHorariosBloqueadosTable();
+
+    const updateServiciosTable = require('./migrations/updateServiciosTable');
+    await updateServiciosTable();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
