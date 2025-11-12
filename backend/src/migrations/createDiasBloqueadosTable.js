@@ -25,9 +25,25 @@ async function createDiasBloqueadosTable() {
       console.log('✅ Tabla dias_bloqueados creada exitosamente');
     } else {
       console.log('✓ La tabla dias_bloqueados ya existe');
+
+      // Verificar si tiene la columna creado_en
+      const columnExists = await pool.query(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'dias_bloqueados' AND column_name = 'creado_en'
+      `);
+
+      if (columnExists.rows.length === 0) {
+        console.log('🔄 Agregando columna creado_en a dias_bloqueados...');
+        await pool.query(`
+          ALTER TABLE dias_bloqueados
+          ADD COLUMN creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        `);
+        console.log('✅ Columna creado_en agregada exitosamente');
+      }
     }
   } catch (error) {
-    console.error('❌ Error al crear tabla dias_bloqueados:', error.message);
+    console.error('❌ Error al migrar tabla dias_bloqueados:', error.message);
   }
 }
 
