@@ -6,7 +6,7 @@ const path = require('path');
 const obtenerConfiguracion = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT tipo_pago, link_mercadopago, activo FROM configuracion_pagos ORDER BY id DESC LIMIT 1'
+      'SELECT tipo_pago, link_mercadopago, alias_transferencia, mensaje_transferencia, imagen_qr, activo FROM configuracion_pagos ORDER BY id DESC LIMIT 1'
     );
 
     if (result.rows.length === 0) {
@@ -23,30 +23,55 @@ const obtenerConfiguracion = async (req, res) => {
 // Actualizar configuración de pagos (solo admin)
 const actualizarConfiguracion = async (req, res) => {
   try {
-    const { tipo_pago, link_mercadopago } = req.body;
+    const { tipo_pago, link_mercadopago, alias_transferencia, mensaje_transferencia } = req.body;
+    const imagenQR = req.file ? `/uploads/${req.file.filename}` : null;
 
-    console.log('Datos recibidos:', { tipo_pago, link_mercadopago });
+    console.log('Datos recibidos:', {
+      tipo_pago,
+      link_mercadopago,
+      alias_transferencia,
+      mensaje_transferencia,
+      imagenQR
+    });
 
     if (!tipo_pago) {
       return res.status(400).json({ mensaje: 'El tipo de pago es requerido' });
     }
 
-    const result = await pool.query(
-      `UPDATE configuracion_pagos
-       SET tipo_pago = $1,
-           link_mercadopago = $2,
-           activo = true
-       WHERE id = 1
-       RETURNING *`,
-      [tipo_pago, link_mercadopago || null]
-    );
+    // Construir la query dinámicamente para incluir imagen solo si se subió
+    let updateQuery = `
+      UPDATE configuracion_pagos
+      SET tipo_pago = $1,
+          link_mercadopago = $2,
+          alias_transferencia = $3,
+          mensaje_transferencia = $4,
+          activo = true
+    `;
+
+    let params = [
+      tipo_pago,
+      link_mercadopago || null,
+      alias_transferencia || null,
+      mensaje_transferencia || null
+    ];
+
+    // Si se subió una imagen, agregarla al update
+    if (imagenQR) {
+      updateQuery += `, imagen_qr = $5`;
+      params.push(imagenQR);
+    }
+
+    updateQuery += ` WHERE id = 1 RETURNING *`;
+
+    const result = await pool.query(updateQuery, params);
 
     if (result.rows.length === 0) {
       // Si no existe, crear uno nuevo
-      const insertResult = await pool.query(
-        'INSERT INTO configuracion_pagos (tipo_pago, link_mercadopago, activo) VALUES ($1, $2, true) RETURNING *',
-        [tipo_pago, link_mercadopago || null]
-      );
+      const insertQuery = imagenQR
+        ? 'INSERT INTO configuracion_pagos (tipo_pago, link_mercadopago, alias_transferencia, mensaje_transferencia, imagen_qr, activo) VALUES ($1, $2, $3, $4, $5, true) RETURNING *'
+        : 'INSERT INTO configuracion_pagos (tipo_pago, link_mercadopago, alias_transferencia, mensaje_transferencia, activo) VALUES ($1, $2, $3, $4, true) RETURNING *';
+
+      const insertResult = await pool.query(insertQuery, params);
       return res.json({
         mensaje: 'Configuración creada correctamente',
         configuracion: insertResult.rows[0]
