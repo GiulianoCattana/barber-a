@@ -1,11 +1,15 @@
 const pool = require('../config/database');
 
-// Obtener todos los servicios del home
+// Obtener todos los servicios del home con información del servicio
 const obtenerHomeServicios = async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM home_servicios ORDER BY orden ASC'
-    );
+    const result = await pool.query(`
+      SELECT hs.*, s.nombre, s.descripcion, s.precio, s.duracion
+      FROM home_servicios hs
+      JOIN servicios s ON hs.servicio_id = s.id
+      WHERE hs.mostrar = true
+      ORDER BY hs.orden ASC
+    `);
     res.json(result.rows);
   } catch (error) {
     console.error('Error al obtener servicios del home:', error);
@@ -13,24 +17,24 @@ const obtenerHomeServicios = async (req, res) => {
   }
 };
 
-// Crear nuevo servicio del home
+// Agregar servicio existente al home
 const crearHomeServicio = async (req, res) => {
   try {
-    const { nombre, descripcion, icono, orden } = req.body;
+    const { servicio_id, orden } = req.body;
 
-    if (!nombre) {
-      return res.status(400).json({ mensaje: 'El nombre es requerido' });
+    if (!servicio_id) {
+      return res.status(400).json({ mensaje: 'El servicio_id es requerido' });
     }
 
     const result = await pool.query(
-      'INSERT INTO home_servicios (nombre, descripcion, icono, orden) VALUES ($1, $2, $3, $4) RETURNING *',
-      [nombre, descripcion || '', icono || '✨', orden || 0]
+      'INSERT INTO home_servicios (servicio_id, orden, mostrar) VALUES ($1, $2, true) RETURNING *',
+      [servicio_id, orden || 0]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error al crear servicio del home:', error);
-    res.status(500).json({ mensaje: 'Error al crear servicio del home' });
+    res.status(500).json({ mensaje: 'Error al crear servicio del home: ' + error.message });
   }
 };
 
@@ -38,11 +42,11 @@ const crearHomeServicio = async (req, res) => {
 const actualizarHomeServicio = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, icono, orden, activo } = req.body;
+    const { orden, mostrar } = req.body;
 
     const result = await pool.query(
-      'UPDATE home_servicios SET nombre = $1, descripcion = $2, icono = $3, orden = $4, activo = $5 WHERE id = $6 RETURNING *',
-      [nombre, descripcion, icono, orden, activo, id]
+      'UPDATE home_servicios SET orden = $1, mostrar = $2 WHERE id = $3 RETURNING *',
+      [orden, mostrar, id]
     );
 
     if (result.rows.length === 0) {
@@ -52,7 +56,7 @@ const actualizarHomeServicio = async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error al actualizar servicio del home:', error);
-    res.status(500).json({ mensaje: 'Error al actualizar servicio del home' });
+    res.status(500).json({ mensaje: 'Error al actualizar servicio del home: ' + error.message });
   }
 };
 
@@ -70,7 +74,7 @@ const eliminarHomeServicio = async (req, res) => {
     res.json({ mensaje: 'Servicio eliminado correctamente' });
   } catch (error) {
     console.error('Error al eliminar servicio del home:', error);
-    res.status(500).json({ mensaje: 'Error al eliminar servicio del home' });
+    res.status(500).json({ mensaje: 'Error al eliminar servicio del home: ' + error.message });
   }
 };
 
