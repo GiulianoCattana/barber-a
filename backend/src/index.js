@@ -120,6 +120,9 @@ app.get('*', (req, res, next) => {
 
     const addDuracionMinutosToTurnos = require('./migrations/addDuracionMinutosToTurnos');
     await addDuracionMinutosToTurnos();
+
+    const addLinkMercadopagoToConfiguracion = require('./migrations/addLinkMercadopagoToConfiguracion');
+    await addLinkMercadopagoToConfiguracion();
   } catch (error) {
     console.error('Error ejecutando migraciones:', error);
   }
