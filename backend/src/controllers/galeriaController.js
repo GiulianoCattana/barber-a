@@ -21,16 +21,23 @@ const obtenerItems = async (req, res) => {
 // Crear un nuevo item de galería
 const crearItem = async (req, res) => {
   try {
-    const { titulo } = req.body;
+    console.log('=== CREAR ITEM DE GALERÍA ===');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
 
-    if (!titulo) {
-      return res.status(400).json({ mensaje: 'Título es requerido' });
+    const { titulo, descripcion } = req.body;
+
+    if (!titulo || !descripcion) {
+      console.log('❌ Faltan datos: titulo=' + titulo + ', descripcion=' + descripcion);
+      return res.status(400).json({ mensaje: 'Título y descripción son requeridos' });
     }
 
     if (!req.file) {
+      console.log('❌ No hay archivo');
       return res.status(400).json({ mensaje: 'La imagen es requerida' });
     }
 
+    console.log('📤 Subiendo a Cloudinary...');
     // Subir imagen a Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: 'wonderbarber/galeria',
@@ -38,26 +45,29 @@ const crearItem = async (req, res) => {
     });
 
     const imagenUrl = result.secure_url;
+    console.log('✅ Imagen subida a Cloudinary:', imagenUrl);
 
     // Eliminar archivo temporal
     if (fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
 
+    console.log('💾 Guardando en BD:', { titulo, descripcion, imagenUrl });
     const query = `
-      INSERT INTO galeria (titulo, imagen_url)
-      VALUES ($1, $2)
+      INSERT INTO galeria (titulo, descripcion, imagen_url)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
 
-    const resultado = await pool.query(query, [titulo, imagenUrl]);
+    const resultado = await pool.query(query, [titulo, descripcion, imagenUrl]);
+    console.log('✅ Guardado en BD:', resultado.rows[0]);
 
     res.status(201).json({
       mensaje: 'Item creado exitosamente',
       item: resultado.rows[0]
     });
   } catch (error) {
-    console.error('Error al crear item:', error);
+    console.error('❌ Error al crear item:', error);
 
     // Eliminar el archivo temporal si hubo un error
     if (req.file && fs.existsSync(req.file.path)) {
@@ -72,10 +82,10 @@ const crearItem = async (req, res) => {
 const actualizarItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { titulo } = req.body;
+    const { titulo, descripcion } = req.body;
 
-    if (!titulo) {
-      return res.status(400).json({ mensaje: 'Título es requerido' });
+    if (!titulo || !descripcion) {
+      return res.status(400).json({ mensaje: 'Título y descripción son requeridos' });
     }
 
     let query;
@@ -114,11 +124,11 @@ const actualizarItem = async (req, res) => {
       }
 
       const imagenUrl = result.secure_url;
-      query = 'UPDATE galeria SET titulo = $1, imagen_url = $2 WHERE id = $3 RETURNING *';
-      params = [titulo, imagenUrl, id];
+      query = 'UPDATE galeria SET titulo = $1, descripcion = $2, imagen_url = $3 WHERE id = $4 RETURNING *';
+      params = [titulo, descripcion, imagenUrl, id];
     } else {
-      query = 'UPDATE galeria SET titulo = $1 WHERE id = $2 RETURNING *';
-      params = [titulo, id];
+      query = 'UPDATE galeria SET titulo = $1, descripcion = $2 WHERE id = $3 RETURNING *';
+      params = [titulo, descripcion, id];
     }
 
     const resultado = await pool.query(query, params);
