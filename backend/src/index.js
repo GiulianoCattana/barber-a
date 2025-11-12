@@ -107,6 +107,6 @@ app.listen(PORT, async () => {
   console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 
   // Ejecutar migraciones
-  const renameGaleriaColumn = require('./migrations/renameGaleriaColumn');
-  await renameGaleriaColumn();
+  const migrateGaleria = require('./migrations/renameGaleriaColumn');
+  await migrateGaleria();
 });
