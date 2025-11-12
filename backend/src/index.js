@@ -100,13 +100,19 @@ app.get('*', (req, res, next) => {
   }
 });
 
-// Iniciar servidor
-app.listen(PORT, async () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📁 Sirviendo frontend desde: ${finalPath}`);
-  console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+// Ejecutar migraciones ANTES de iniciar servidor
+(async () => {
+  try {
+    const migrateGaleria = require('./migrations/renameGaleriaColumn');
+    await migrateGaleria();
+  } catch (error) {
+    console.error('Error ejecutando migraciones:', error);
+  }
 
-  // Ejecutar migraciones
-  const migrateGaleria = require('./migrations/renameGaleriaColumn');
-  await migrateGaleria();
-});
+  // Iniciar servidor
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`📁 Sirviendo frontend desde: ${finalPath}`);
+    console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+  });
+})();
