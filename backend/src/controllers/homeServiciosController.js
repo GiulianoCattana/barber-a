@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const obtenerHomeServicios = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT hs.*, s.nombre, s.descripcion, s.precio, s.duracion
+      SELECT hs.id, hs.icono, hs.orden, hs.mostrar, s.nombre, s.descripcion, s.precio, s.duracion
       FROM home_servicios hs
       JOIN servicios s ON hs.servicio_id = s.id
       WHERE hs.mostrar = true
@@ -17,21 +17,38 @@ const obtenerHomeServicios = async (req, res) => {
   }
 };
 
-// Agregar servicio existente al home
+// Crear servicio nuevo para el home
 const crearHomeServicio = async (req, res) => {
   try {
-    const { servicio_id, orden } = req.body;
+    const { nombre, descripcion, icono, orden } = req.body;
 
-    if (!servicio_id) {
-      return res.status(400).json({ mensaje: 'El servicio_id es requerido' });
+    if (!nombre || !descripcion) {
+      return res.status(400).json({ mensaje: 'El nombre y descripción son requeridos' });
     }
 
-    const result = await pool.query(
-      'INSERT INTO home_servicios (servicio_id, orden, mostrar) VALUES ($1, $2, true) RETURNING *',
-      [servicio_id, orden || 0]
+    // Primero crear el servicio en la tabla servicios
+    const servicioResult = await pool.query(
+      'INSERT INTO servicios (nombre, descripcion, duracion, precio, activo) VALUES ($1, $2, $3, $4, true) RETURNING id',
+      [nombre, descripcion, 30, 0] // Valores por defecto: 30 min duracion, $0 precio
     );
 
-    res.status(201).json(result.rows[0]);
+    const servicioId = servicioResult.rows[0].id;
+
+    // Luego crear la relación en home_servicios
+    const homeResult = await pool.query(
+      'INSERT INTO home_servicios (servicio_id, icono, orden, mostrar) VALUES ($1, $2, $3, true) RETURNING *',
+      [servicioId, icono || '✨', orden || 0]
+    );
+
+    // Devolver el servicio completo
+    const finalResult = await pool.query(`
+      SELECT hs.id, hs.icono, hs.orden, s.nombre, s.descripcion
+      FROM home_servicios hs
+      JOIN servicios s ON hs.servicio_id = s.id
+      WHERE hs.id = $1
+    `, [homeResult.rows[0].id]);
+
+    res.status(201).json(finalResult.rows[0]);
   } catch (error) {
     console.error('Error al crear servicio del home:', error);
     res.status(500).json({ mensaje: 'Error al crear servicio del home: ' + error.message });
@@ -42,18 +59,40 @@ const crearHomeServicio = async (req, res) => {
 const actualizarHomeServicio = async (req, res) => {
   try {
     const { id } = req.params;
-    const { orden, mostrar } = req.body;
+    const { nombre, descripcion, icono, orden, mostrar } = req.body;
 
-    const result = await pool.query(
-      'UPDATE home_servicios SET orden = $1, mostrar = $2 WHERE id = $3 RETURNING *',
-      [orden, mostrar, id]
-    );
+    // Obtener el servicio_id de home_servicios
+    const homeServicio = await pool.query('SELECT servicio_id FROM home_servicios WHERE id = $1', [id]);
 
-    if (result.rows.length === 0) {
+    if (homeServicio.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Servicio no encontrado' });
     }
 
-    res.json(result.rows[0]);
+    const servicioId = homeServicio.rows[0].servicio_id;
+
+    // Actualizar el servicio en la tabla servicios
+    if (nombre || descripcion) {
+      await pool.query(
+        'UPDATE servicios SET nombre = COALESCE($1, nombre), descripcion = COALESCE($2, descripcion) WHERE id = $3',
+        [nombre, descripcion, servicioId]
+      );
+    }
+
+    // Actualizar en home_servicios
+    const result = await pool.query(
+      'UPDATE home_servicios SET icono = COALESCE($1, icono), orden = COALESCE($2, orden), mostrar = COALESCE($3, mostrar) WHERE id = $4 RETURNING *',
+      [icono, orden, mostrar !== undefined ? mostrar : null, id]
+    );
+
+    // Devolver el servicio completo actualizado
+    const finalResult = await pool.query(`
+      SELECT hs.id, hs.icono, hs.orden, hs.mostrar, s.nombre, s.descripcion
+      FROM home_servicios hs
+      JOIN servicios s ON hs.servicio_id = s.id
+      WHERE hs.id = $1
+    `, [id]);
+
+    res.json(finalResult.rows[0]);
   } catch (error) {
     console.error('Error al actualizar servicio del home:', error);
     res.status(500).json({ mensaje: 'Error al actualizar servicio del home: ' + error.message });
