@@ -1,31 +1,39 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Configuración de Gmail SMTP
-// NOTA: Si Render bloquea puertos SMTP, los emails NO funcionarán automáticamente
-// En ese caso, configurar manualmente BREVO_API_KEY en Render
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+// Detectar entorno: usar Resend en producción (si existe RESEND_API_KEY), Gmail SMTP en local
+const usarResend = !!process.env.RESEND_API_KEY;
+let transporter = null;
+let resendClient = null;
 
-// Verificar conexión
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error('❌ Error al conectar con Gmail:', error);
-    console.log('⚠️  Si estás en Render, los puertos SMTP están bloqueados');
-    console.log('⚠️  Configura BREVO_API_KEY en las variables de entorno de Render');
-  } else {
-    console.log('✅ Gmail SMTP configurado y listo');
-  }
-});
+if (usarResend) {
+  // PRODUCCIÓN: Usar Resend API
+  resendClient = new Resend(process.env.RESEND_API_KEY);
+  console.log('📧 Usando Resend API para envío de emails');
+} else {
+  // LOCAL: Usar Gmail SMTP
+  transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+
+  // Verificar conexión solo en modo Gmail
+  transporter.verify(function(error, success) {
+    if (error) {
+      console.error('❌ Error al conectar con Gmail:', error);
+    } else {
+      console.log('✅ Gmail SMTP configurado y listo');
+    }
+  });
+}
 
 // Función para generar código de 6 dígitos
 const generarCodigoVerificacion = () => {
@@ -34,11 +42,7 @@ const generarCodigoVerificacion = () => {
 
 // Función para enviar código de verificación
 const enviarCodigoVerificacion = async (email, codigo) => {
-  const mailOptions = {
-    from: `"Wonder Barber" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Código de Recuperación de Contraseña - Wonder Barber',
-    html: `
+  const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -128,11 +132,28 @@ const enviarCodigoVerificacion = async (email, codigo) => {
       </div>
     </body>
     </html>
-    `
-  };
+  `;
 
   try {
-    await transporter.sendMail(mailOptions);
+    if (usarResend) {
+      // Enviar con Resend
+      await resendClient.emails.send({
+        from: 'Wonder Barber <onboarding@resend.dev>',
+        to: email,
+        subject: 'Código de Recuperación de Contraseña - Wonder Barber',
+        html: htmlContent
+      });
+    } else {
+      // Enviar con Gmail SMTP
+      const mailOptions = {
+        from: `"Wonder Barber" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Código de Recuperación de Contraseña - Wonder Barber',
+        html: htmlContent
+      };
+      await transporter.sendMail(mailOptions);
+    }
+
     console.log(`✅ Código enviado a ${email}`);
     return true;
   } catch (error) {

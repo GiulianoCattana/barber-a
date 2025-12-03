@@ -21,10 +21,9 @@ const registro = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // SOLO clientes necesitan verificar email
-    // Admin se crea verificado automáticamente
-    const esCliente = true; // Siempre es cliente cuando se registra desde el frontend
-    const emailVerificado = !esCliente; // Si no es cliente (admin), ya está verificado
+    // VERIFICACIÓN DE EMAIL DESHABILITADA TEMPORALMENTE
+    // Los usuarios pueden usar el sistema inmediatamente después de registrarse
+    const emailVerificado = true; // Auto-verificado para lanzamiento rápido
 
     // Crear el usuario
     const nuevoUsuario = await pool.query(
@@ -34,33 +33,23 @@ const registro = async (req, res) => {
 
     const usuario = nuevoUsuario.rows[0];
 
-    // Si es cliente, enviar código de verificación
-    if (esCliente) {
-      try {
-        await enviarEmailVerificacion(email, nombre);
-        console.log(`✅ Código de verificación enviado a ${email}`);
-      } catch (emailError) {
-        console.error('Error al enviar email:', emailError);
-        // Eliminar el usuario si falla el envío del email
-        await pool.query('DELETE FROM usuarios WHERE id = $1', [usuario.id]);
-        return res.status(500).json({
-          mensaje: 'Error al enviar el código de verificación. Por favor intenta nuevamente.'
-        });
-      }
-
-      // NO devolver token, solo confirmar que debe verificar email
-      return res.status(201).json({
-        mensaje: '¡Registro exitoso! Revisa tu email para verificar tu cuenta.',
-        requiresVerification: true,
-        email: usuario.email
-      });
+    // OPCIONAL: Enviar email de bienvenida (sin bloquear el registro si falla)
+    // Comentado temporalmente hasta tener dominio verificado
+    /*
+    try {
+      await enviarEmailVerificacion(email, nombre);
+      console.log(`✅ Email de bienvenida enviado a ${email}`);
+    } catch (emailError) {
+      console.error('⚠️ No se pudo enviar email de bienvenida:', emailError);
+      // No bloquear el registro si falla el email
     }
+    */
 
-    // Si es admin (esto no debería pasar en registro público, pero por si acaso)
+    // Generar token para login automático
     const token = jwt.sign(
-      { id: usuario.id, rol: usuario.rol },
+      { id: usuario.id, email: usuario.email, rol: usuario.rol },
       process.env.JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '24h' }
     );
 
     res.status(201).json({
@@ -103,7 +92,10 @@ const login = async (req, res) => {
       return res.status(401).json({ mensaje: 'Credenciales inválidas' });
     }
 
-    // Verificar si el email está verificado (SOLO para clientes)
+    // VERIFICACIÓN DE EMAIL DESHABILITADA TEMPORALMENTE
+    // Los usuarios pueden loguearse sin verificar email
+    // Cuando tengas dominio, descomenta estas líneas:
+    /*
     if (usuario.rol === 'cliente' && !usuario.email_verificado) {
       return res.status(403).json({
         mensaje: 'Por favor verifica tu email antes de iniciar sesión',
@@ -111,6 +103,7 @@ const login = async (req, res) => {
         email: usuario.email
       });
     }
+    */
 
     // Generar token
     const token = jwt.sign(
