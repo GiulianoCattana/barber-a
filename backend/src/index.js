@@ -66,6 +66,10 @@ app.get('/api', (req, res) => {
   res.json({ mensaje: 'API de Peluquería funcionando correctamente' });
 });
 
+// Ruta temporal para limpiar datos (solo en desarrollo)
+const { limpiarDatos } = require('./controllers/limpiarDatosController');
+app.post('/api/limpiar-datos', limpiarDatos);
+
 // Servir archivos estáticos del frontend (Angular build)
 const fs = require('fs');
 
