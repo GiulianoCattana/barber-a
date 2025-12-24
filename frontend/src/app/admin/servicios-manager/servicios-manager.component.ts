@@ -101,19 +101,42 @@ export class ServiciosManagerComponent implements OnInit {
     }
   }
 
-  eliminarServicio(id: number) {
+  desactivarServicio(id: number) {
     if (!confirm('¿Está seguro de que desea desactivar este servicio?')) {
+      return;
+    }
+
+    const servicio = this.servicios.find(s => s.id === id);
+    if (servicio) {
+      servicio.activo = false;
+      this.serviciosService.actualizarServicio(id, servicio).subscribe({
+        next: () => {
+          this.cargarServicios();
+          alert('Servicio desactivado exitosamente');
+        },
+        error: (error) => {
+          console.error('Error al desactivar servicio:', error);
+          alert('Error al desactivar servicio');
+        }
+      });
+    }
+  }
+
+  eliminarServicioPermanente(id: number) {
+    if (!confirm('⚠️ ¿Está seguro de que desea ELIMINAR PERMANENTEMENTE este servicio?\n\nEsta acción NO se puede deshacer.')) {
       return;
     }
 
     this.serviciosService.eliminarServicio(id).subscribe({
       next: () => {
-        this.cargarServicios();
-        alert('Servicio desactivado exitosamente');
+        // Eliminar de la lista local inmediatamente
+        this.servicios = this.servicios.filter(s => s.id !== id);
+        alert('Servicio eliminado permanentemente');
       },
       error: (error) => {
         console.error('Error al eliminar servicio:', error);
-        alert('Error al eliminar servicio');
+        const mensaje = error.error?.mensaje || 'Error al eliminar servicio';
+        alert(mensaje);
       }
     });
   }

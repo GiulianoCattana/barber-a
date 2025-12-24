@@ -261,6 +261,7 @@
 }
 
 .btn-editar,
+.btn-desactivar,
 .btn-eliminar,
 .btn-activar {
   flex: 1;
@@ -280,6 +281,15 @@
 
 .btn-editar:hover {
   background: #2980b9;
+}
+
+.btn-desactivar {
+  background: #f39c12;
+  color: white;
+}
+
+.btn-desactivar:hover {
+  background: #e67e22;
 }
 
 .btn-eliminar {

@@ -106,25 +106,30 @@ const actualizarServicio = async (req, res) => {
   }
 };
 
-// Eliminar (desactivar) un servicio
+// Eliminar PERMANENTEMENTE un servicio
 const eliminarServicio = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = `
-      UPDATE servicios
-      SET activo = false,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING *
-    `;
+    // Primero verificar si existen turnos ACTIVOS (no cancelados) con este servicio
+    const turnosQuery = 'SELECT COUNT(*) as total FROM turnos WHERE servicio_id = $1 AND estado != $2';
+    const turnosResult = await pool.query(turnosQuery, [id, 'cancelado']);
+
+    if (parseInt(turnosResult.rows[0].total) > 0) {
+      return res.status(400).json({
+        mensaje: 'No se puede eliminar el servicio porque tiene turnos activos asociados. Desactívelo en su lugar.'
+      });
+    }
+
+    // Si no hay turnos, eliminar permanentemente
+    const query = 'DELETE FROM servicios WHERE id = $1 RETURNING *';
     const resultado = await pool.query(query, [id]);
 
     if (resultado.rows.length === 0) {
       return res.status(404).json({ mensaje: 'Servicio no encontrado' });
     }
 
-    res.json({ mensaje: 'Servicio desactivado exitosamente', servicio: resultado.rows[0] });
+    res.json({ mensaje: 'Servicio eliminado permanentemente', servicio: resultado.rows[0] });
   } catch (error) {
     console.error('Error al eliminar servicio:', error);
     res.status(500).json({ mensaje: 'Error al eliminar servicio' });

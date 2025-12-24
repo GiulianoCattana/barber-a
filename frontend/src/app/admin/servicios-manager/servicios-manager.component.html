@@ -98,8 +98,8 @@
           <button class="btn-editar" (click)="editarServicio(servicio)">Editar</button>
           <button
             *ngIf="servicio.activo"
-            class="btn-eliminar"
-            (click)="eliminarServicio(servicio.id!)">
+            class="btn-desactivar"
+            (click)="desactivarServicio(servicio.id!)">
             Desactivar
           </button>
           <button
@@ -107,6 +107,11 @@
             class="btn-activar"
             (click)="activarServicio(servicio.id!)">
             Activar
+          </button>
+          <button
+            class="btn-eliminar"
+            (click)="eliminarServicioPermanente(servicio.id!)">
+            Eliminar
           </button>
         </div>
       </div>
